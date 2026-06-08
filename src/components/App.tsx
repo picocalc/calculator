@@ -1,0 +1,11 @@
+import { createSignal } from "solid-js";
+
+function App() {
+  return (
+    <main class="container mx-auto p-4">
+      <h1 class="text-2xl font-bold mb-4">App</h1>
+    </main>
+  );
+}
+
+export default App;

@@ -1,0 +1,29 @@
+{
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#app": "./src/components/App.tsx",
+    "#layout": "./src/layouts/Layout.astro",
+    "#styles": "./src/styles/global.css"
+  },
+  "scripts": {
+    "lint": "biome check",
+    "format": "biome check --fix",
+    "dev": "astro dev",
+    "build": "astro build",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "astro": "6.4.4",
+    "solid-js": "1.9.13",
+    "tailwindcss": "4.3.0"
+  },
+  "devDependencies": {
+    "@astrojs/solid-js": "6.0.1",
+    "@biomejs/biome": "2.4.16",
+    "@gameroman/config": "0.1.0",
+    "@tailwindcss/vite": "4.3.0",
+    "typescript": "6.0.3",
+    "wrangler": "4.98.0"
+  }
+}
