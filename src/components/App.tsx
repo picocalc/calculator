@@ -1,5 +1,5 @@
 import { calculate } from "picocalc";
-import { createSignal, onMount } from "solid-js";
+import { createEffect, createSignal, onMount } from "solid-js";
 
 function Calculator() {
   const [history, setHistory] = createSignal("");
@@ -8,6 +8,24 @@ function Calculator() {
   const [isLargeDataStored, setIsLargeDataStored] = createSignal(false);
   const [preciseMode, setPreciseMode] = createSignal(false);
   const [expression, setExpression] = createSignal("");
+  const [preview, setPreview] = createSignal<
+    { ok: true; value: string } | { ok: false; error: string } | null
+  >(null);
+
+  createEffect(() => {
+    const exp = expression();
+    if (!exp || exp === "0") {
+      setPreview(null);
+      return;
+    }
+    try {
+      const options = preciseMode() ? { format: "precise" as const } : {};
+      const result = calculate(exp, options);
+      setPreview({ ok: true, value: result });
+    } catch {
+      // don't show errors in preview until Enter is pressed
+    }
+  });
 
   // oxlint-disable-next-line no-unassigned-vars (false-positive)
   let mainDisplayRef: HTMLDivElement | undefined;
@@ -112,7 +130,10 @@ function Calculator() {
         setStatus(`Done in ${(end - start).toFixed(2)}ms`);
         scrollDisplayToEnd();
       } catch (err) {
-        setStatus(err instanceof Error ? err.message : "Unknown error");
+        setPreview({
+          ok: false,
+          error: err instanceof Error ? err.message : "Unknown error",
+        });
       }
     }, 10);
   }
@@ -196,6 +217,14 @@ function Calculator() {
         >
           0
         </div>
+        <div class="text-right text-xs h-5 overflow-hidden text-ellipsis whitespace-nowrap border-t border-white/5 mt-1 pt-1">
+          {(() => {
+            const p = preview();
+            if (!p) return null;
+            if (p.ok) return <span class="text-slate-400">= {p.value}</span>;
+            return <span class="text-rose-400">{p.error}</span>;
+          })()}
+        </div>
       </div>
 
       <div class="grid grid-cols-4 gap-2">
@@ -242,8 +271,6 @@ function Calculator() {
           =
         </button>
       </div>
-
-      <div class="text-[10px] text-slate-600 text-center">{status()}</div>
     </div>
   );
 }
