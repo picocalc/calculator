@@ -132,8 +132,8 @@
       const urlParams = new URLSearchParams(window.location.search);
       const tag = urlParams.get('tag');
       const importUrl = tag
-        ? `https://esm.sh/gh/gameroman/math-parser@${tag}`
-        : "https://esm.sh/gh/gameroman/math-parser";
+        ? `https://esm.sh/gh/picocalc/math-parser@${tag}`
+        : "https://esm.sh/gh/picocalc/math-parser";
 
       const { calculate } = await import(importUrl);
 
