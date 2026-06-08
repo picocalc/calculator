@@ -5,6 +5,7 @@
     "": {
       "dependencies": {
         "astro": "6.4.4",
+        "picocalc": "0.0.1",
         "solid-js": "1.9.13",
         "tailwindcss": "4.3.0",
       },
@@ -722,6 +723,8 @@
     "pathe": ["pathe@2.0.3", "", {}, "sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w=="],
 
     "piccolore": ["piccolore@0.1.3", "", {}, "sha512-o8bTeDWjE086iwKrROaDf31K0qC/BENdm15/uH9usSC/uZjJOKb2YGiVHfLY4GhwsERiPI1jmwI2XrA7ACOxVw=="],
+
+    "picocalc": ["picocalc@0.0.1", "", {}, "sha512-KITTjdx7qF+cQrJJXPc126PTuOaVUOJ3DfQKfuYJlCcjQNzYcLPMfWsA3NSfUKby1lpwX8CNpVGUFygOn6/wRQ=="],
 
     "picocolors": ["picocolors@1.1.1", "", {}, "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA=="],
 
