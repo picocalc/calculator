@@ -1,0 +1,29 @@
+interface Props {
+  label: string;
+  onClick(): void;
+  variant: "number" | "op" | "accent" | "danger" | "success" | "fn";
+  span?: number;
+}
+
+const variants = {
+  number: "bg-slate-800/50 text-white",
+  op: "bg-indigo-900/40 text-indigo-400",
+  accent: "bg-amber-900/30 text-amber-400",
+  danger: "bg-rose-900/40 text-rose-400",
+  success: "bg-emerald-900/40 text-emerald-400",
+  fn: "bg-slate-800 text-slate-300",
+} as const;
+
+function CalculatorButton(props: Props) {
+  return (
+    <button
+      onClick={props.onClick}
+      class={`calc-button select-none cursor-pointer ${props.span ? `col-span-${props.span}` : ""} ${variants[props.variant]} py-4 rounded-lg`}
+      type="button"
+    >
+      {props.label}
+    </button>
+  );
+}
+
+export default CalculatorButton;
