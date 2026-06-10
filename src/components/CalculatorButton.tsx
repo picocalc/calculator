@@ -1,10 +1,3 @@
-interface Props {
-  label: string;
-  onClick(): void;
-  variant: "number" | "op" | "accent" | "danger" | "success" | "fn";
-  span?: number;
-}
-
 const variants = {
   number: "bg-slate-800/50 text-white",
   op: "bg-indigo-900/40 text-indigo-400",
@@ -14,11 +7,24 @@ const variants = {
   fn: "bg-slate-800 text-slate-300",
 } as const;
 
+const spans = {
+  2: "col-span-2",
+  3: "col-span-3",
+  4: "col-span-4",
+} as const;
+
+interface Props {
+  label: string;
+  onClick(): void;
+  variant: keyof typeof variants; 
+  span?: keyof typeof spans; 
+}
+
 function CalculatorButton(props: Props) {
   return (
     <button
       onClick={props.onClick}
-      class={`calc-button select-none cursor-pointer ${props.span ? `col-span-${props.span}` : ""} ${variants[props.variant]} py-4 rounded-lg`}
+      className={`calc-button select-none cursor-pointer ${props.span ? spans[props.span] : ""} ${variants[props.variant]} py-4 rounded-lg`}
       type="button"
     >
       {props.label}
