@@ -16,8 +16,8 @@ const spans = {
 interface Props {
   label: string;
   onClick(): void;
-  variant: keyof typeof variants; 
-  span?: keyof typeof spans; 
+  variant: keyof typeof variants;
+  span?: keyof typeof spans;
 }
 
 function CalculatorButton(props: Props) {
