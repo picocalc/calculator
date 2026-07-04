@@ -16,7 +16,7 @@
   "dependencies": {
     "astro": "6.4.4",
     "picocalc": "0.0.1",
-    "solid-js": "1.9.13",
+    "solid-js": "1.9.14",
     "tailwindcss": "4.3.0"
   },
   "devDependencies": {
