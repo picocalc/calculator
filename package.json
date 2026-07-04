@@ -17,13 +17,13 @@
     "astro": "6.4.4",
     "picocalc": "0.0.1",
     "solid-js": "1.9.14",
-    "tailwindcss": "4.3.0"
+    "tailwindcss": "4.3.2"
   },
   "devDependencies": {
     "@astrojs/solid-js": "6.0.1",
     "@biomejs/biome": "2.4.16",
     "@gameroman/config": "0.1.0",
-    "@tailwindcss/vite": "4.3.0",
+    "@tailwindcss/vite": "4.3.2",
     "typescript": "6.0.3",
     "wrangler": "4.107.0"
   }
