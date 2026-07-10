@@ -28,8 +28,8 @@
   },
   "devDependencies": {
     "@astrojs/solid-js": "7.0.1",
-    "@biomejs/biome": "2.5.1",
-    "@gameroman/config": "0.2.2",
+    "@biomejs/biome": "2.5.3",
+    "@gameroman/config": "0.2.4",
     "@tailwindcss/vite": "4.3.2",
     "typescript": "6.0.3",
     "wrangler": "4.107.0"
