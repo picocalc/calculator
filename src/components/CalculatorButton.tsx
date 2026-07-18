@@ -24,7 +24,7 @@ function CalculatorButton(props: Props) {
   return (
     <button
       onClick={props.onClick}
-      className={`calc-button select-none cursor-pointer ${props.span ? spans[props.span] : ""} ${variants[props.variant]} py-4 rounded-lg`}
+      className={`calc-button select-none cursor-pointer touch-manipulation ${props.span ? spans[props.span] : ""} ${variants[props.variant]} py-4 rounded-lg`}
       type="button"
     >
       {props.label}
