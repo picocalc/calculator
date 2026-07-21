@@ -7,7 +7,7 @@ interface Props {
 }
 
 function Display(props: Props) {
-  const previewJsx = (): JSX.Element => {
+  const preview = (): JSX.Element => {
     const p = props.preview;
     if (!p) return null;
     if (p.ok) return <span class="text-slate-400">= {p.value}</span>;
@@ -15,7 +15,7 @@ function Display(props: Props) {
   };
 
   return (
-    <div class="display-container bg-black/40 p-4 rounded-xl border border-white/5">
+    <div class="max-w-full w-full overflow-hidden flex flex-col contain-content bg-black/40 p-4 rounded-xl border border-white/5">
       <div class="text-slate-500 text-xs h-5 mb-1 overflow-hidden text-ellipsis whitespace-nowrap w-full text-left">
         {props.history}
       </div>
@@ -23,12 +23,12 @@ function Display(props: Props) {
         ref={props.setDisplayRef}
         contenteditable="plaintext-only"
         spellcheck={false}
-        class="main-display"
+        class="main-display bg-transparent border-none outline-none text-right w-full overflow-x-auto whitespace-pre"
       >
         0
       </div>
       <div class="text-right text-xs h-5 overflow-hidden text-ellipsis whitespace-nowrap border-t border-white/5 mt-1 pt-1">
-        {previewJsx()}
+        {preview()}
       </div>
     </div>
   );

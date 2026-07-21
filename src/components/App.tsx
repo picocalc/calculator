@@ -31,7 +31,6 @@ function Calculator() {
     }
   });
 
-  // oxlint-disable-next-line no-unassigned-vars (false-positive)
   let mainDisplayRef: HTMLDivElement | undefined;
 
   const MAX_LENGTH_THRESHOLD = 200_000;
