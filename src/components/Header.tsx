@@ -38,7 +38,7 @@ function Header(props: Props) {
         </label>
         <button
           onClick={handleCopy}
-          class="cursor-pointer text-[10px] text-slate-400 hover:text-white border border-slate-700 px-2 py-1 rounded"
+          class="cursor-pointer touch-manipulation text-[10px] text-slate-400 hover:text-white border border-slate-700 px-2 py-1 rounded"
           type="button"
         >
           {copied() ? "COPIED" : "COPY"}

@@ -11,7 +11,8 @@
     "deploy": "wrangler deploy",
     "dev": "astro dev",
     "format": "biome check --fix",
-    "lint": "biome check"
+    "lint": "biome check",
+    "preview": "astro preview"
   },
   "overrides": {
     "@babel/helper-module-imports": "7.29.7",

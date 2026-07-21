@@ -1,5 +1,5 @@
 import { calculate } from "picocalc";
-import { createEffect, createSignal, onMount } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 
 import CalculatorButtons from "./CalculatorButtons.tsx";
 import Display from "./Display.tsx";
@@ -31,40 +31,16 @@ function Calculator() {
     }
   });
 
-  // oxlint-disable-next-line no-unassigned-vars (false-positive)
-  let mainDisplayRef: HTMLDivElement | undefined;
+  let mainDisplayRef: HTMLInputElement | undefined;
 
   const MAX_LENGTH_THRESHOLD = 200_000;
 
-  onMount(async () => {
-    if (!mainDisplayRef) return;
-
-    mainDisplayRef.addEventListener("paste", (e) => {
-      e.preventDefault();
-      if (!e.clipboardData) return;
-      const paste = e.clipboardData.getData("text");
-      const cleanPaste = paste.trim().split(/\r?\n/)[0];
-      document.execCommand("insertText", false, cleanPaste);
-    });
-
-    mainDisplayRef.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        performCalculation();
-      }
-    });
-
-    mainDisplayRef.addEventListener("input", () => {
-      if (!isLargeDataStored() && mainDisplayRef) {
-        setExpression(mainDisplayRef.innerText);
-      }
-    });
-  });
-
   function scrollDisplayToEnd() {
-    if (mainDisplayRef) {
-      mainDisplayRef.scrollLeft = mainDisplayRef.scrollWidth;
-    }
+    requestAnimationFrame(() => {
+      if (mainDisplayRef) {
+        mainDisplayRef.scrollLeft = mainDisplayRef.scrollWidth;
+      }
+    });
   }
 
   function appendToken(token: string) {
@@ -74,42 +50,63 @@ function Calculator() {
           ? token
           : expression() + token;
 
-      if (newExpr.length < MAX_LENGTH_THRESHOLD) {
-        if (mainDisplayRef) mainDisplayRef.innerText = newExpr;
-        setIsLargeDataStored(false);
-      } else if (mainDisplayRef) {
-        mainDisplayRef.innerHTML = `<span class="placeholder-text">[Large Expression: ${newExpr.length} chars]</span>`;
-        setIsLargeDataStored(true);
-      }
+      setIsLargeDataStored(newExpr.length >= MAX_LENGTH_THRESHOLD);
       setExpression(newExpr);
       setIsResultShown(false);
+      scrollDisplayToEnd();
     } else {
-      const currentText = mainDisplayRef?.innerText || "0";
+      const currentText = expression() || "0";
       if (
         currentText === "0" &&
         !["+", "*", "/", "^", "!", "%", "."].includes(token)
       ) {
-        if (mainDisplayRef) mainDisplayRef.innerText = token;
-      } else if (mainDisplayRef) {
-        mainDisplayRef.innerText += token;
+        setExpression(token);
+        const cursorPos = token.length;
+        requestAnimationFrame(() => {
+          mainDisplayRef?.setSelectionRange(cursorPos, cursorPos);
+        });
+      } else {
+        const start = mainDisplayRef?.selectionStart ?? currentText.length;
+        const end = mainDisplayRef?.selectionEnd ?? currentText.length;
+        const newValue =
+          currentText.slice(0, start) + token + currentText.slice(end);
+        setExpression(newValue);
+        const cursorPos = start + token.length;
+        requestAnimationFrame(() => {
+          mainDisplayRef?.setSelectionRange(cursorPos, cursorPos);
+        });
       }
-      setExpression(mainDisplayRef?.innerText || "");
     }
-    scrollDisplayToEnd();
   }
 
   function clearAll() {
-    if (mainDisplayRef) mainDisplayRef.innerText = "0";
-    setExpression("");
+    setExpression("0");
     setHistory("");
     setIsResultShown(false);
     setIsLargeDataStored(false);
+    requestAnimationFrame(() => {
+      mainDisplayRef?.setSelectionRange(1, 1);
+    });
+  }
+
+  function backspace() {
+    if (isResultShown() || isLargeDataStored()) {
+      clearAll();
+      return;
+    }
+    const currentText = expression();
+    if (!currentText || currentText === "0") return;
+    const pos = mainDisplayRef?.selectionStart ?? currentText.length;
+    if (pos === 0) return;
+    const newValue = currentText.slice(0, pos - 1) + currentText.slice(pos);
+    setExpression(newValue || "0");
+    requestAnimationFrame(() => {
+      mainDisplayRef?.setSelectionRange(pos - 1, pos - 1);
+    });
   }
 
   function performCalculation() {
-    const exp = isLargeDataStored()
-      ? expression()
-      : mainDisplayRef?.innerText.trim() || "";
+    const exp = expression().trim();
     if (!exp || exp === "0") return;
 
     setTimeout(() => {
@@ -124,7 +121,6 @@ function Calculator() {
             : `${exp} =`,
         );
 
-        if (mainDisplayRef) mainDisplayRef.innerText = result;
         setExpression(result.toString());
         setIsResultShown(true);
         setIsLargeDataStored(false);
@@ -139,10 +135,7 @@ function Calculator() {
   }
 
   function copyResult() {
-    const text = isLargeDataStored()
-      ? expression()
-      : mainDisplayRef?.innerText || "";
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(expression());
   }
 
   return (
@@ -154,12 +147,21 @@ function Calculator() {
       />
       <Display
         history={history()}
+        expression={expression()}
+        isLargeDataStored={isLargeDataStored()}
         preview={preview()}
+        onInput={(value) => {
+          if (!isLargeDataStored()) {
+            setExpression(value);
+          }
+        }}
+        onCalculate={performCalculation}
         setDisplayRef={(el) => (mainDisplayRef = el)}
       />
       <CalculatorButtons
         onAppendToken={appendToken}
         onClearAll={clearAll}
+        onBackspace={backspace}
         onCalculate={performCalculation}
       />
     </div>

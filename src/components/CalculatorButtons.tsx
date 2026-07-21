@@ -3,6 +3,7 @@ import CalculatorButton from "./CalculatorButton.tsx";
 interface Props {
   onAppendToken(token: string): void;
   onClearAll(): void;
+  onBackspace(): void;
   onCalculate(): void;
 }
 
@@ -13,7 +14,6 @@ function CalculatorButtons(props: Props) {
         label="AC"
         onClick={props.onClearAll}
         variant="danger"
-        span={2}
       />
       <CalculatorButton
         label="π"
@@ -24,6 +24,11 @@ function CalculatorButtons(props: Props) {
         label="e"
         onClick={() => props.onAppendToken("e")}
         variant="accent"
+      />
+      <CalculatorButton
+        label="⌫"
+        onClick={props.onBackspace}
+        variant="danger"
       />
 
       <CalculatorButton
