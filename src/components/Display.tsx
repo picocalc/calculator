@@ -11,6 +11,8 @@ interface Props {
 }
 
 function Display(props: Props) {
+  let capturedPaste = "";
+
   const preview = (): JSX.Element => {
     const p = props.preview;
     if (!p) return null;
@@ -28,7 +30,11 @@ function Display(props: Props) {
       <div class="text-slate-500 text-xs h-5 mb-1 overflow-hidden text-ellipsis whitespace-nowrap w-full text-left">
         {props.history}
       </div>
+      <label for="calculator-display" class="sr-only">
+        Calculator expression
+      </label>
       <input
+        id="calculator-display"
         ref={props.setDisplayRef}
         type="text"
         value={displayValue()}
@@ -43,9 +49,14 @@ function Display(props: Props) {
           }
         }}
         onPaste={(e) => {
+          capturedPaste = e.clipboardData?.getData("text") || "";
+        }}
+        onBeforeInput={(e) => {
+          if (e.inputType !== "insertFromPaste") return;
           e.preventDefault();
           if (props.isLargeDataStored) return;
-          const paste = e.clipboardData?.getData("text") || "";
+          const paste = e.data ?? capturedPaste;
+          capturedPaste = "";
           const cleanPaste = paste.trim().split(/\r?\n/)[0] ?? "";
           const input = e.currentTarget;
           const start = input.selectionStart ?? props.expression.length;
