@@ -61,6 +61,10 @@ function Calculator() {
         !["+", "*", "/", "^", "!", "%", "."].includes(token)
       ) {
         setExpression(token);
+        const cursorPos = token.length;
+        requestAnimationFrame(() => {
+          mainDisplayRef?.setSelectionRange(cursorPos, cursorPos);
+        });
       } else {
         const start = mainDisplayRef?.selectionStart ?? currentText.length;
         const end = mainDisplayRef?.selectionEnd ?? currentText.length;
@@ -80,6 +84,25 @@ function Calculator() {
     setHistory("");
     setIsResultShown(false);
     setIsLargeDataStored(false);
+    requestAnimationFrame(() => {
+      mainDisplayRef?.setSelectionRange(1, 1);
+    });
+  }
+
+  function backspace() {
+    if (isResultShown() || isLargeDataStored()) {
+      clearAll();
+      return;
+    }
+    const currentText = expression();
+    if (!currentText || currentText === "0") return;
+    const pos = mainDisplayRef?.selectionStart ?? currentText.length;
+    if (pos === 0) return;
+    const newValue = currentText.slice(0, pos - 1) + currentText.slice(pos);
+    setExpression(newValue || "0");
+    requestAnimationFrame(() => {
+      mainDisplayRef?.setSelectionRange(pos - 1, pos - 1);
+    });
   }
 
   function performCalculation() {
@@ -138,6 +161,7 @@ function Calculator() {
       <CalculatorButtons
         onAppendToken={appendToken}
         onClearAll={clearAll}
+        onBackspace={backspace}
         onCalculate={performCalculation}
       />
     </div>
