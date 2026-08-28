@@ -17,7 +17,7 @@
   "overrides": {
     "@babel/helper-module-imports": "7.29.7",
     "@jridgewell/trace-mapping": "0.3.31",
-    "js-yaml": "npm:neoyaml@0.1.1",
+    "js-yaml": "npm:neoyaml@0.1.2",
     "semver": "7.8.5",
     "unstorage": "2.0.0-alpha.9"
   },
