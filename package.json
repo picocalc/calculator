@@ -19,7 +19,7 @@
     "@jridgewell/trace-mapping": "0.3.31",
     "js-yaml": "npm:neoyaml@0.2.0",
     "semver": "7.8.5",
-    "unstorage": "2.0.0-alpha.9"
+    "unstorage": "2.0.0-alpha.10"
   },
   "dependencies": {
     "astro": "7.2.8",
