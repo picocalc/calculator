@@ -27,7 +27,7 @@ function Display(props: Props) {
 
   return (
     <div class="max-w-full w-full overflow-hidden flex flex-col contain-content bg-black/40 p-4 rounded-xl border border-white/5">
-      <div class="text-slate-500 text-xs h-5 mb-1 overflow-hidden text-ellipsis whitespace-nowrap w-full text-left">
+      <div class="text-slate-500 text-xs h-5 mb-1 truncate w-full text-left">
         {props.history}
       </div>
       <label for="calculator-display" class="sr-only">
@@ -71,11 +71,10 @@ function Display(props: Props) {
             input.setSelectionRange(cursorPos, cursorPos);
           });
         }}
-        class={`main-display bg-transparent border-none outline-none text-right w-full overflow-x-auto whitespace-pre ${
-          props.isLargeDataStored ? "placeholder-style" : ""
-        }`}
+        class="main-display bg-transparent border-none outline-none text-right w-full overflow-x-auto whitespace-pre"
+        classList={{ "placeholder-style": props.isLargeDataStored }}
       />
-      <div class="text-right text-xs h-5 overflow-hidden text-ellipsis whitespace-nowrap border-t border-white/5 mt-1 pt-1">
+      <div class="text-right text-xs h-5 truncate border-t border-white/5 mt-1 pt-1">
         {preview()}
       </div>
     </div>
