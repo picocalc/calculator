@@ -33,7 +33,7 @@ function Header(props: Props) {
               class="sr-only peer"
             />
             <div class="w-7 h-4 bg-slate-700 rounded-full peer-checked:bg-emerald-600 transition-colors" />
-            <div class="absolute left-0.5 top-0.5 bg-white w-3 h-3 rounded-full transition-transform peer-checked:translate-x-3" />
+            <div class="absolute left-0.5 top-0.5 bg-white size-3 rounded-full transition-transform peer-checked:translate-x-3" />
           </div>
         </label>
         <button
