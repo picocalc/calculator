@@ -22,7 +22,7 @@
     "@jridgewell/trace-mapping": "0.3.31",
     "@napi-rs/wasm-runtime": "1.2.7",
     "lightningcss": "1.33.0",
-    "semver": "7.8.5",
+    "semver": "7.8.6",
     "sharp": "0.35.5",
     "unstorage": "2.0.0-beta.0"
   },
