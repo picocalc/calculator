@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@astrojs/solid-js": "7.1.2",
-    "@biomejs/biome": "2.6.4",
+    "@biomejs/biome": "2.6.6",
     "@gameroman/config": "0.3.0",
     "@tailwindcss/vite": "4.3.4",
     "@vite-pwa/astro": "2.0.0",
