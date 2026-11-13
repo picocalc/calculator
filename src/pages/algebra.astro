@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NanoCAS Studio — Symbolic Calculus & Canvas Explorer</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.10/tailwindcss.js"></script>
+  <!-- Inter & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* Custom subtle scrollbars for inspector panels */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.35); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
+    canvas { touch-action: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200 min-h-screen flex flex-col">
+
+  <!-- Top Navigation & Expression Bar -->
+  <header class="border-b border-slate-800/90 bg-slate-900/80 backdrop-blur-md sticky top-0 z-20">
+    <div class="max-w-[1600px] mx-auto px-3 sm:px-6 py-3 flex flex-col gap-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 font-mono font-bold text-sm text-white">
+            ∂x
+          </div>
+          <div>
+            <h1 class="text-sm sm:text-base font-semibold tracking-tight text-white flex items-center gap-2">
+              NanoCAS Studio
+              <span id="engine-badge" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                Loading nanoalgebra…
+              </span>
+            </h1>
+          </div>
+        </div>
+
+        <!-- Preset Chips -->
+        <div class="flex items-center gap-1.5 overflow-x-auto max-w-full pb-0.5">
+          <span class="text-[11px] uppercase tracking-wider text-slate-400 font-medium mr-1 hidden sm:inline">Presets:</span>
+          <button data-expr="sin(x) + cos(2*x)/2" class="preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/70 transition whitespace-nowrap">sin(x) + cos(2x)/2</button>
+          <button data-expr="x^3 - 3*x + 1" class="preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/70 transition whitespace-nowrap">x³ − 3x + 1</button>
+          <button data-expr="ln(x^2 + 1)" class="preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/70 transition whitespace-nowrap">ln(x² + 1)</button>
+          <button data-expr="sqrt(x^2) + sin(x)" class="preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/70 transition whitespace-nowrap">sqrt(x²) + sin(x)</button>
+          <button data-expr="min(sin(x), cos(x))" class="preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/70 transition whitespace-nowrap">min(sin(x), cos(x))</button>
+          <button data-expr="sqrt(72) + sqrt(8) + diff(x^3, x)/6" class="preset-btn px-2.5 py-1.5 rounded-lg text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/70 transition whitespace-nowrap">sqrt(72)+sqrt(8)+diff(x³,x)/6</button>
+        </div>
+      </div>
+
+      <!-- Expression Input Row -->
+      <div class="flex flex-col sm:flex-row gap-2">
+        <div class="relative flex-1 flex items-center">
+          <span class="absolute left-3.5 font-mono text-sm font-semibold text-indigo-400 select-none">f(x) =</span>
+          <input
+            id="expr-input"
+            type="text"
+            value="sin(x) + cos(2*x)/2"
+            spellcheck="false"
+            autocomplete="off"
+            placeholder="Try: sin(x) + x^2/4, sqrt(72) + sqrt(8), diff(x^4, x), min(x, 2)..."
+            class="w-full pl-16 pr-24 py-2.5 rounded-xl bg-slate-950 border border-slate-700/90 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none font-mono text-sm text-white placeholder-slate-500 transition"
+          />
+          <button
+            id="eval-btn"
+            class="absolute right-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-xs font-semibold text-white transition shadow-sm"
+          >
+            Simplify
+          </button>
+        </div>
+      </div>
+
+      <!-- Inline Error Banner (replaces alert) -->
+      <div id="error-banner" class="hidden px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 font-mono text-xs flex items-center justify-between gap-2">
+        <span id="error-text"></span>
+        <button id="dismiss-error" class="text-rose-400 hover:text-rose-200 px-1.5 py-0.5 rounded">✕</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace Grid -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+    <!-- Left Column: Interactive Canvas Viewport (7 cols) -->
+    <section class="lg:col-span-7 flex flex-col gap-3 min-h-[420px] sm:min-h-[540px]">
+      <div class="relative flex-1 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl flex flex-col">
+
+        <!-- Canvas Overlay Controls (Top) -->
+        <div class="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+          <!-- Curve Layer Toggles -->
+          <div class="flex flex-wrap items-center gap-1.5 pointer-events-auto bg-slate-950/85 backdrop-blur-md p-1.5 rounded-xl border border-slate-800/90 shadow-lg">
+            <button id="toggle-f" class="layer-toggle active flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-500/20 text-indigo-200 border border-indigo-500/40 transition">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span> f(x)
+            </button>
+            <button id="toggle-df" class="layer-toggle active flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 transition">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> f′(x)
+            </button>
+            <button id="toggle-taylor" class="layer-toggle active flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-500/20 text-amber-200 border border-amber-500/40 transition">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Taylor Tₙ(x)
+            </button>
+            <button id="toggle-tangent" class="layer-toggle active flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-rose-500/20 text-rose-200 border border-rose-500/40 transition">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Tangent
+            </button>
+          </div>
+
+          <!-- Interaction Mode & Zoom Controls -->
+          <div class="flex items-center gap-1.5 pointer-events-auto bg-slate-950/85 backdrop-blur-md p-1.5 rounded-xl border border-slate-800/90 shadow-lg">
+            <button id="mode-btn" title="Switch drag behavior between Scrubbing x₀ and Panning view" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+              Drag: <span id="mode-label" class="text-rose-300 font-semibold">Scrub x₀</span>
+            </button>
+            <button id="zoom-in" aria-label="Zoom in" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition font-mono text-xs">+</button>
+            <button id="zoom-out" aria-label="Zoom out" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition font-mono text-xs">−</button>
+            <button id="reset-view" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition text-xs">Reset</button>
+          </div>
+        </div>
+
+        <!-- Main Interactive Plot Canvas -->
+        <div id="canvas-wrap" class="relative flex-1 w-full h-full min-h-[360px]">
+          <canvas id="plot-canvas" class="block w-full h-full cursor-crosshair"></canvas>
+        </div>
+
+        <!-- Bottom HUD Readout Bar -->
+        <div class="border-t border-slate-800 bg-slate-950/90 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <div><span class="text-slate-400">x₀ =</span> <span id="hud-x" class="text-rose-300 font-semibold">0.50</span></div>
+            <div><span class="text-slate-400">f(x₀) =</span> <span id="hud-y" class="text-indigo-300 font-semibold">—</span></div>
+            <div><span class="text-slate-400">f′(x₀) =</span> <span id="hud-dy" class="text-emerald-300 font-semibold">—</span></div>
+            <div><span class="text-slate-400">Tₙ(x₀) =</span> <span id="hud-ty" class="text-amber-300 font-semibold">—</span></div>
+          </div>
+          <div class="text-[11px] text-slate-400 hidden sm:block">
+            Wheel: Zoom • Right-drag / Shift+drag: Pan • Drag: Scrub x₀
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Tangent & Taylor Controls Card -->
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-xs">
+            <label for="x0-slider" class="font-medium text-slate-300">Expansion & Tangent Point <span class="font-mono text-rose-300">x₀</span></label>
+            <div class="flex items-center gap-1.5">
+              <input id="x0-number" type="number" step="0.1" value="0.5" class="w-20 px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 font-mono text-xs text-rose-300 text-right outline-none focus:border-rose-400" />
+              <button id="snap-zero" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">x₀=0</button>
+            </div>
+          </div>
+          <input id="x0-slider" type="range" min="-6" max="6" step="0.05" value="0.5" class="w-full accent-rose-500 cursor-pointer" />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-xs">
+            <label for="taylor-degree" class="font-medium text-slate-300">Taylor Polynomial Degree <span class="font-mono text-amber-300">N</span></label>
+            <span id="taylor-degree-val" class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono font-semibold">N = 5</span>
+          </div>
+          <input id="taylor-degree" type="range" min="0" max="10" step="1" value="5" class="w-full accent-amber-500 cursor-pointer" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Symbolic CAS & AST Inspector (5 cols) -->
+    <section class="lg:col-span-5 flex flex-col gap-3">
+
+      <!-- Symbolic Simplification & Exact Value Card -->
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 flex flex-col gap-3 shadow-xl">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Symbolic CAS Output</h2>
+          <span class="text-[11px] font-mono text-slate-500">BigInt Exact Tower</span>
+        </div>
+
+        <div class="space-y-2.5">
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800/90">
+            <div class="text-[11px] font-medium text-indigo-400 mb-1">Canonical Simplified f(x)</div>
+            <div id="out-simplified" class="font-mono text-sm text-white break-all select-all">—</div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800/90">
+            <div class="text-[11px] font-medium text-rose-400 mb-1">Exact Symbolic Evaluation f(x₀)</div>
+            <div id="out-exact-val" class="font-mono text-sm text-rose-200 break-all select-all">—</div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800/90">
+              <div class="text-[11px] font-medium text-emerald-400 mb-1">1st Derivative f′(x)</div>
+              <div id="out-df" class="font-mono text-xs text-emerald-200 break-all select-all">—</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800/90">
+              <div class="text-[11px] font-medium text-teal-400 mb-1">2nd Derivative f″(x)</div>
+              <div id="out-ddf" class="font-mono text-xs text-teal-200 break-all select-all">—</div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800/90">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] font-medium text-amber-400">Taylor Series Tₙ(x) around x₀</span>
+              <button id="copy-taylor" class="text-[11px] font-mono text-slate-400 hover:text-amber-300 transition">Copy</button>
+            </div>
+            <div id="out-taylor" class="font-mono text-xs text-amber-200 break-all max-h-24 overflow-y-auto select-all">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live AST & Token Inspector -->
+      <div class="rounded-2xl bg-slate-900 border border-slate-800 p-4 flex-1 flex flex-col gap-2.5 shadow-xl min-h-[220px]">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Simplified AST Inspector</h2>
+          <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <button id="tab-tree" class="px-2 py-0.5 rounded text-[11px] font-mono bg-indigo-600 text-white">Visual Nodes</button>
+            <button id="tab-json" class="px-2 py-0.5 rounded text-[11px] font-mono text-slate-400 hover:text-white">Raw JSON</button>
+          </div>
+        </div>
+
+        <div id="ast-tree-view" class="flex-1 rounded-xl bg-slate-950 border border-slate-800/90 p-3 overflow-auto font-mono text-xs max-h-[280px]"></div>
+        <pre id="ast-json-view" class="hidden flex-1 rounded-xl bg-slate-950 border border-slate-800/90 p-3 overflow-auto font-mono text-[11px] text-slate-300 max-h-[280px]"></pre>
+      </div>
+
+    </section>
+  </main>
+
+  <script type="module">
+    // =========================================================================
+    // 1. Load nanoalgebra from esm.sh
+    // =========================================================================
+    const badge = document.getElementById('engine-badge');
+    let m;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const commit = params.get('commit') ?? 'b9f42ba';
+      const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
+      m = mod.parse ? mod : mod.default;
+      badge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20';
+      badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> nanoalgebra@59a79b8';
+    } catch (err) {
+      badge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-rose-500/10 text-rose-300 border border-rose-500/20';
+      badge.innerHTML = 'Failed to load nanoalgebra';
+      throw err;
+    }
+
+    // =========================================================================
+    // 2. Custom Symbolic CAS Layer on top of nanoalgebra's AST & Evaluator
+    // =========================================================================
+    const FUNCS = new Set([
+      'sqrt', 'abs', 'sin', 'cos', 'tan', 'ln', 'exp', 'log',
+      'min', 'max', 'gcd', 'lcm', 'diff'
+    ]);
+
+    const parse = (s) => m.parse(s, { functions: FUNCS });
+    const num = (n) => parse(BigInt(n).toString());
+
+    // Deep AST clone preserving prototype methods (.print(), etc.)
+    const clone = (n) => {
+      if (!n || typeof n !== 'object') return n;
+      const c = Object.assign(Object.create(Object.getPrototypeOf(n)), n);
+      if ('left' in c) c.left = clone(c.left);
+      if ('right' in c) c.right = clone(c.right);
+      if (Array.isArray(c.args)) c.args = c.args.map(clone);
+      return c;
+    };
+
+    // Template constructors backed by m.parse
+    const op = (sym, a, b) => Object.assign(parse(`x${sym}y`), { left: clone(a), right: clone(b) });
+    const fn = (name, ...args) => Object.assign(parse(`${name}(x)`), { args: args.map(clone) });
+    const HALF = new m.Evaluator().simplify(parse('1/2'));
+
+    const bigGcd = (a, b) => {
+      a = a < 0n ? -a : a;
+      b = b < 0n ? -b : b;
+      while (b !== 0n) [a, b] = [b, a % b];
+      return a;
+    };
+
+    // Unified numeric converter across INTEGER, FRACTION, and DECIMAL nodes
+    const toRat = (n) => {
+      if (!n) return null;
+      if (n.type === 'INTEGER') return [BigInt(n.value), 1n];
+      if (n.type === 'FRACTION') return [BigInt(n.numerator), BigInt(n.denominator)];
+      if (n.type === 'DECIMAL') {
+        const w = BigInt(n.whole);
+        const e = BigInt(n.exponent);
+        if (e >= 0n) return [w * (10n ** e), 1n];
+        const den = 10n ** (-e);
+        const g = bigGcd(w, den);
+        return [w / g, den / g];
+      }
+      return null;
+    };
+
+    const cmpRat = (a, b) => {
+      const [n1, d1] = toRat(a);
+      const [n2, d2] = toRat(b);
+      const lhs = n1 * d2;
+      const rhs = n2 * d1;
+      return lhs < rhs ? -1 : lhs > rhs ? 1 : 0;
+    };
+
+    const isZero = (n) => {
+      const r = toRat(n);
+      return r !== null && r[0] === 0n;
+    };
+
+    const isOne = (n) => {
+      const r = toRat(n);
+      return r !== null && r[0] === r[1];
+    };
+
+    // Exact BigInt Newton integer nth-root
+    function iroot(val, n) {
+      if (val < 0n || n <= 0n) return null;
+      if (val < 2n) return val;
+      let x = 1n << (BigInt(val.toString(2).length) / n + 1n);
+      while (true) {
+        const y = ((n - 1n) * x + val / (x ** (n - 1n))) / n;
+        if (y >= x) return x ** n === val ? x : null;
+        x = y;
+      }
+    }
+
+    // Check if an AST subtree references variable v
+    function dependsOn(node, v = 'x') {
+      if (!node || typeof node !== 'object') return false;
+      if (node.type === 'SYMBOL') return node.name === v;
+      if ('left' in node && dependsOn(node.left, v)) return true;
+      if ('right' in node && dependsOn(node.right, v)) return true;
+      if (Array.isArray(node.args)) return node.args.some((a) => dependsOn(a, v));
+      return false;
+    }
+
+    // Substitute symbols with AST nodes
+    function substitute(node, env) {
+      if (!node || typeof node !== 'object') return node;
+      if (node.type === 'SYMBOL' && Object.prototype.hasOwnProperty.call(env, node.name)) {
+        return clone(env[node.name]);
+      }
+      const c = Object.assign(Object.create(Object.getPrototypeOf(node)), node);
+      if ('left' in c) c.left = substitute(c.left, env);
+      if ('right' in c) c.right = substitute(c.right, env);
+      if (Array.isArray(c.args)) c.args = c.args.map((a) => substitute(a, env));
+      return c;
+    }
+
+    // Recursive symbolic rewrite rules
+    function rewrite(node) {
+      if (!node || typeof node !== 'object') return node;
+      if ('left' in node) node.left = rewrite(node.left);
+      if ('right' in node) node.right = rewrite(node.right);
+      if (Array.isArray(node.args)) node.args = node.args.map(rewrite);
+
+      if (node.type === 'FUNCTION') {
+        const { name, args } = node;
+
+        // Inline symbolic derivative: diff(expr) or diff(expr, var)
+        if (name === 'diff' && (args.length === 1 || (args.length === 2 && args[1].type === 'SYMBOL'))) {
+          return rewrite(diff(args[0], args[1]?.name ?? 'x'));
+        }
+
+        // Variadic min / max with flattening & partial rational folding
+        if ((name === 'min' || name === 'max') && args.length >= 1) {
+          const flat = args.flatMap((a) => (a.type === 'FUNCTION' && a.name === name ? a.args : [a]));
+          const nums = flat.filter((a) => toRat(a) !== null);
+          const rest = flat.filter((a) => toRat(a) === null);
+          if (nums.length > 1) {
+            const best = nums.reduce((a, b) =>
+              (name === 'min' ? cmpRat(a, b) <= 0 : cmpRat(a, b) >= 0) ? a : b
+            );
+            rest.unshift(best);
+          } else {
+            rest.unshift(...nums);
+          }
+          return rest.length === 1 ? rest[0] : fn(name, ...rest);
+        }
+
+        // Variadic integer gcd / lcm
+        if ((name === 'gcd' || name === 'lcm') && args.length >= 2 && args.every((a) => a.type === 'INTEGER')) {
+          const vals = args.map((a) => (a.value < 0n ? -a.value : a.value));
+          const res = vals.reduce((a, b) =>
+            name === 'gcd' ? bigGcd(a, b) : a === 0n || b === 0n ? 0n : (a / bigGcd(a, b)) * b
+          );
+          return num(res);
+        }
+
+        // Arbitrary-base log(base, x) -> ln(x) / ln(base)
+        if (name === 'log' && args.length === 2) {
+          return rewrite(op('/', fn('ln', args[1]), fn('ln', args[0])));
+        }
+
+        // Strict unary functions
+        if (args.length === 1) {
+          const [a] = args;
+          if (name === 'abs') {
+            const r = toRat(a);
+            if (r !== null) {
+              return r[0] < 0n ? op('*', num(-1n), a) : a;
+            }
+          }
+          if (name === 'sqrt') {
+            if (a.type === 'POWER' && a.right.type === 'INTEGER' && a.right.value === 2n) {
+              return rewrite(fn('abs', a.left));
+            }
+            return rewrite(op('^', a, HALF));
+          }
+          if (name === 'sin' && isZero(a)) return num(0n);
+          if (name === 'cos' && isZero(a)) return num(1n);
+          if (name === 'tan' && isZero(a)) return num(0n);
+          if (name === 'exp') {
+            if (isZero(a)) return num(1n);
+            if (isOne(a)) return parse('e');
+            return rewrite(op('^', parse('e'), a));
+          }
+          if (name === 'ln') {
+            if (isOne(a)) return num(0n);
+            if (a.type === 'SYMBOL' && a.name === 'e') return num(1n);
+            if (a.type === 'POWER' && a.left.type === 'SYMBOL' && a.left.name === 'e') return a.right;
+          }
+        }
+      }
+
+      // Exact BigInt nth-root & square-factor radical extraction
+      if (node.type === 'POWER' && node.left.type === 'INTEGER' && node.right.type === 'FRACTION') {
+        const { value: b } = node.left;
+        const { numerator: p, denominator: q } = node.right;
+        if (b >= 0n && p > 0n) {
+          const r = iroot(b, q);
+          if (r !== null) return num(r ** p);
+          if (q === 2n && p === 1n) {
+            let out = 1n;
+            let rem = b;
+            for (let d = 2n; d * d <= rem; d += d === 2n ? 1n : 2n) {
+              while (rem % (d * d) === 0n) {
+                out *= d;
+                rem /= d * d;
+              }
+            }
+            if (out > 1n) return op('*', num(out), op('^', num(rem), HALF));
+          }
+        }
+      }
+
+      return node;
+    }
+
+    // Flatten ADD chains and combine all numeric constants (INTEGER, FRACTION, DECIMAL)
+    function foldAdds(node, ev) {
+      if (!node || typeof node !== 'object') return node;
+      if ('left' in node) node.left = foldAdds(node.left, ev);
+      if ('right' in node) node.right = foldAdds(node.right, ev);
+      if (Array.isArray(node.args)) node.args = node.args.map((a) => foldAdds(a, ev));
+      if (node.type !== 'ADD') return node;
+
+      const terms = [];
+      (function collect(x) {
+        if (x.type === 'ADD') {
+          collect(x.left);
+          collect(x.right);
+        } else {
+          terms.push(x);
+        }
+      })(node);
+
+      const nums = terms.filter((t) => toRat(t) !== null);
+      if (nums.length < 2) return node;
+
+      const rest = terms.filter((t) => toRat(t) === null);
+      const sum = nums.reduce((acc, cur) => ev.simplify(op('+', acc, cur)));
+      const all = isZero(sum) ? rest : [...rest, sum];
+      return all.length ? all.reduce((acc, cur) => op('+', acc, cur)) : num(0n);
+    }
+
+    function simplify(input) {
+      const ev = new m.Evaluator();
+      const ast = typeof input === 'string' ? parse(input) : clone(input);
+      const pass1 = ev.simplify(ast);
+      const pass2 = rewrite(pass1);
+      const pass3 = ev.simplify(pass2);
+      const pass4 = foldAdds(pass3, ev);
+      return ev.simplify(pass4);
+    }
+
+    // Symbolic differentiation engine
+    function diff(input, v = 'x') {
+      const n = typeof input === 'string' ? parse(input) : input;
+      const d = (x) => diff(x, v);
+
+      switch (n.type) {
+        case 'INTEGER':
+        case 'FRACTION':
+        case 'DECIMAL':
+          return num(0n);
+        case 'SYMBOL':
+          return num(n.name === v ? 1n : 0n);
+        case 'ADD':
+        case 'SUBTRACT':
+          return op(n.type === 'ADD' ? '+' : '-', d(n.left), d(n.right));
+        case 'MULTIPLY':
+          return op('+', op('*', n.left, d(n.right)), op('*', n.right, d(n.left)));
+        case 'DIVIDE':
+          return op(
+            '/',
+            op('-', op('*', n.right, d(n.left)), op('*', n.left, d(n.right))),
+            op('^', n.right, num(2n))
+          );
+        case 'POWER': {
+          const uHas = dependsOn(n.left, v);
+          const vHas = dependsOn(n.right, v);
+          if (!uHas && !vHas) return num(0n);
+          // Power rule: u(x)^c
+          if (!vHas) {
+            return op('*', op('*', n.right, op('^', n.left, op('-', n.right, num(1n)))), d(n.left));
+          }
+          // Exponential rule: e^v(x)
+          if (n.left.type === 'SYMBOL' && n.left.name === 'e') {
+            return op('*', clone(n), d(n.right));
+          }
+          // General logarithmic differentiation: u(x)^v(x)
+          return op(
+            '*',
+            clone(n),
+            op('+', op('*', d(n.right), fn('ln', n.left)), op('/', op('*', n.right, d(n.left)), n.left))
+          );
+        }
+        case 'FUNCTION': {
+          const [u] = n.args;
+          if (n.name === 'sin') return op('*', fn('cos', u), d(u));
+          if (n.name === 'cos') return op('*', op('*', num(-1n), fn('sin', u)), d(u));
+          if (n.name === 'tan') return op('/', d(u), op('^', fn('cos', u), num(2n)));
+          if (n.name === 'ln') return op('/', d(u), u);
+          if (n.name === 'exp') return op('*', fn('exp', u), d(u));
+          if (n.name === 'sqrt') return op('/', d(u), op('*', num(2n), fn('sqrt', u)));
+          if (n.name === 'abs') return op('*', op('/', u, fn('abs', u)), d(u));
+          if (n.name === 'log' && n.args.length === 2) {
+            return d(op('/', fn('ln', n.args[1]), fn('ln', n.args[0])));
+          }
+          return num(0n);
+        }
+        default:
+          return num(0n);
+      }
+    }
+
+    // Symbolic Taylor polynomial generator around x = centerNode of order N
+    function buildTaylor(exprAst, centerNode, degree) {
+      let currentDeriv = clone(exprAst);
+      let fact = 1n;
+      let poly = null;
+
+      for (let k = 0; k <= degree; k++) {
+        if (k > 0) {
+          currentDeriv = simplify(diff(currentDeriv, 'x'));
+          fact *= BigInt(k);
+        }
+        const atCenter = simplify(substitute(currentDeriv, { x: centerNode }));
+        if (isZero(atCenter)) continue;
+
+        const coeff = simplify(op('/', atCenter, num(fact)));
+        if (isZero(coeff)) continue;
+
+        let term;
+        if (k === 0) {
+          term = coeff;
+        } else {
+          const dx = isZero(centerNode) ? parse('x') : simplify(op('-', parse('x'), centerNode));
+          const powTerm = k === 1 ? dx : op('^', dx, num(BigInt(k)));
+          term = isOne(coeff) ? powTerm : op('*', coeff, powTerm);
+        }
+        poly = poly ? op('+', poly, term) : term;
+      }
+
+      return simplify(poly ?? num(0n));
+    }
+
+    // Fast, safe floating-point AST evaluator for real-time Canvas plotting
+    function evalNumeric(node, xVal) {
+      if (!node) return NaN;
+      switch (node.type) {
+        case 'INTEGER':
+          return Number(node.value);
+        case 'FRACTION':
+          return Number(node.numerator) / Number(node.denominator);
+        case 'DECIMAL':
+          return Number(node.whole) * Math.pow(10, Number(node.exponent));
+        case 'SYMBOL':
+          if (node.name === 'x') return xVal;
+          if (node.name === 'e') return Math.E;
+          if (node.name === 'pi') return Math.PI;
+          return NaN;
+        case 'ADD':
+          return evalNumeric(node.left, xVal) + evalNumeric(node.right, xVal);
+        case 'SUBTRACT':
+          return evalNumeric(node.left, xVal) - evalNumeric(node.right, xVal);
+        case 'MULTIPLY':
+          return evalNumeric(node.left, xVal) * evalNumeric(node.right, xVal);
+        case 'DIVIDE': {
+          const den = evalNumeric(node.right, xVal);
+          return den === 0 ? NaN : evalNumeric(node.left, xVal) / den;
+        }
+        case 'POWER': {
+          const base = evalNumeric(node.left, xVal);
+          const exp = evalNumeric(node.right, xVal);
+          return Math.pow(base, exp);
+        }
+        case 'FUNCTION': {
+          const vals = node.args.map((a) => evalNumeric(a, xVal));
+          switch (node.name) {
+            case 'sqrt': return Math.sqrt(vals[0]);
+            case 'abs': return Math.abs(vals[0]);
+            case 'sin': return Math.sin(vals[0]);
+            case 'cos': return Math.cos(vals[0]);
+            case 'tan': return Math.tan(vals[0]);
+            case 'ln': return Math.log(vals[0]);
+            case 'exp': return Math.exp(vals[0]);
+            case 'log': return vals.length === 2 ? Math.log(vals[1]) / Math.log(vals[0]) : Math.log10(vals[0]);
+            case 'min': return Math.min(...vals);
+            case 'max': return Math.max(...vals);
+            default: return NaN;
+          }
+        }
+        default:
+          return NaN;
+      }
+    }
+
+    // =========================================================================
+    // 3. Application State & DOM Bindings
+    // =========================================================================
+    const state = {
+      exprStr: 'sin(x) + cos(2*x)/2',
+      fAst: null,
+      dfAst: null,
+      ddfAst: null,
+      taylorAst: null,
+      x0: 0.5,
+      taylorDegree: 5,
+      layers: { f: true, df: true, taylor: true, tangent: true },
+      dragMode: 'scrub', // 'scrub' | 'pan'
+      view: { cx: 0, cy: 0, scale: 56 }, // pixels per unit
+    };
+
+    const exprInput = document.getElementById('expr-input');
+    const errorBanner = document.getElementById('error-banner');
+    const errorText = document.getElementById('error-text');
+    const outSimplified = document.getElementById('out-simplified');
+    const outExactVal = document.getElementById('out-exact-val');
+    const outDf = document.getElementById('out-df');
+    const outDdf = document.getElementById('out-ddf');
+    const outTaylor = document.getElementById('out-taylor');
+    const astTreeView = document.getElementById('ast-tree-view');
+    const astJsonView = document.getElementById('ast-json-view');
+
+    function showError(msg) {
+      errorText.textContent = msg;
+      errorBanner.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorBanner.classList.add('hidden');
+    }
+
+    // Render interactive AST pills
+    function renderAstTree(node, depth = 0) {
+      if (!node || typeof node !== 'object') return '';
+      const badgeColors = {
+        INTEGER: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+        FRACTION: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+        DECIMAL: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
+        SYMBOL: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+        FUNCTION: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+        POWER: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+        MULTIPLY: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+        ADD: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+        SUBTRACT: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+        DIVIDE: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/30',
+      };
+      const cls = badgeColors[node.type] || 'bg-slate-800 text-slate-300 border-slate-700';
+
+      let detail = '';
+      if (node.type === 'INTEGER') detail = `value: ${node.value}n`;
+      else if (node.type === 'FRACTION') detail = `${node.numerator}n / ${node.denominator}n`;
+      else if (node.type === 'DECIMAL') detail = `${node.whole} × 10^${node.exponent}`;
+      else if (node.type === 'SYMBOL') detail = `"${node.name}"`;
+      else if (node.type === 'FUNCTION') detail = `${node.name}(…)`;
+
+      const children = [];
+      if ('left' in node) children.push(renderAstTree(node.left, depth + 1));
+      if ('right' in node) children.push(renderAstTree(node.right, depth + 1));
+      if (Array.isArray(node.args)) node.args.forEach((a) => children.push(renderAstTree(a, depth + 1)));
+
+      return `
+        <div class="${depth > 0 ? 'ml-3.5 pl-2.5 border-l border-slate-800' : ''} my-1">
+          <div class="inline-flex items-center gap-2 py-0.5">
+            <span class="px-1.5 py-0.5 rounded border text-[10px] font-semibold ${cls}">${node.type}</span>
+            ${detail ? `<span class="text-slate-300 text-xs">${detail}</span>` : ''}
+          </div>
+          ${children.join('')}
+        </div>
+      `;
+    }
+
+    function updatePointCalculations() {
+      if (!state.fAst) return;
+      try {
+        // Parse x0 through nanoalgebra so x0 = 0.5 becomes exact DECIMAL/FRACTION
+        const x0Str = Number.isInteger(state.x0) ? String(state.x0) : state.x0.toFixed(4).replace(/\.?0+$/, '');
+        const x0Node = simplify(parse(x0Str || '0'));
+
+        const exactSub = simplify(substitute(state.fAst, { x: x0Node }));
+        outExactVal.textContent = exactSub.print();
+
+        state.taylorAst = buildTaylor(state.fAst, x0Node, state.taylorDegree);
+        outTaylor.textContent = state.taylorAst.print();
+      } catch (err) {
+        outExactVal.textContent = '—';
+      }
+      updateHud();
+      drawCanvas();
+    }
+
+    function recomputeAll() {
+      const raw = exprInput.value.trim();
+      if (!raw) return;
+      try {
+        const simplified = simplify(raw);
+        const df = simplify(diff(simplified, 'x'));
+        const ddf = simplify(diff(df, 'x'));
+
+        state.exprStr = raw;
+        state.fAst = simplified;
+        state.dfAst = df;
+        state.ddfAst = ddf;
+
+        outSimplified.textContent = simplified.print();
+        outDf.textContent = df.print();
+        outDdf.textContent = ddf.print();
+
+        astTreeView.innerHTML = renderAstTree(simplified);
+        astJsonView.textContent = JSON.stringify(
+          simplified,
+          (_, v) => (typeof v === 'bigint' ? `${v.toString()}n` : v),
+          2
+        );
+
+        hideError();
+        updatePointCalculations();
+      } catch (err) {
+        showError(err.message || String(err));
+      }
+    }
+
+    // =========================================================================
+    // 4. Interactive High-DPI HTML5 Canvas Grapher
+    // =========================================================================
+    const canvas = document.getElementById('plot-canvas');
+    const canvasWrap = document.getElementById('canvas-wrap');
+    const ctx = canvas.getContext('2d');
+
+    function worldToScreen(wx, wy, w, h) {
+      const sx = w / 2 + (wx - state.view.cx) * state.view.scale;
+      const sy = h / 2 - (wy - state.view.cy) * state.view.scale;
+      return [sx, sy];
+    }
+
+    function screenToWorld(sx, sy, w, h) {
+      const wx = state.view.cx + (sx - w / 2) / state.view.scale;
+      const wy = state.view.cy - (sy - h / 2) / state.view.scale;
+      return [wx, wy];
+    }
+
+    function niceStep(pixelsPerUnit) {
+      const targetPx = 75;
+      const rawStep = targetPx / pixelsPerUnit;
+      const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const norm = rawStep / mag;
+      if (norm < 1.5) return 1 * mag;
+      if (norm < 3.5) return 2 * mag;
+      if (norm < 7.5) return 5 * mag;
+      return 10 * mag;
+    }
+
+    function plotCurve(ast, color, width, dash, w, h) {
+      if (!ast) return;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.setLineDash(dash);
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+
+      const samples = Math.max(400, Math.floor(w * 1.25));
+      let penDown = false;
+      let prevSy = null;
+
+      for (let i = 0; i <= samples; i++) {
+        const sx = (i / samples) * w;
+        const [wx] = screenToWorld(sx, 0, w, h);
+        const wy = evalNumeric(ast, wx);
+
+        if (!Number.isFinite(wy)) {
+          penDown = false;
+          prevSy = null;
+          continue;
+        }
+
+        const [, sy] = worldToScreen(wx, wy, w, h);
+        // Break stroke on vertical asymptotes / sharp jumps
+        if (prevSy !== null && Math.abs(sy - prevSy) > h * 1.4) {
+          penDown = false;
+        }
+
+        if (!penDown) {
+          ctx.moveTo(sx, sy);
+          penDown = true;
+        } else {
+          ctx.lineTo(sx, sy);
+        }
+        prevSy = sy;
+      }
+
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawCanvas() {
+      const rect = canvasWrap.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const w = rect.width;
+      const MAX_HEIGHT = 800;
+      const h = Math.min(rect.height , MAX_HEIGHT);
+      if (w === 0 || h === 0) return;
+
+      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+      }
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      // Background
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, w, h);
+
+      const step = niceStep(state.view.scale);
+      const [xMin, yMax] = screenToWorld(0, 0, w, h);
+      const [xMax, yMin] = screenToWorld(w, h, w, h);
+
+      // Minor & Major Grid Lines
+      const firstX = Math.floor(xMin / step) * step;
+      const firstY = Math.floor(yMin / step) * step;
+
+      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.textBaseline = 'top';
+
+      const [originX, originY] = worldToScreen(0, 0, w, h);
+
+      for (let gx = firstX; gx <= xMax; gx += step) {
+        const [sx] = worldToScreen(gx, 0, w, h);
+        const isAxis = Math.abs(gx) < step * 1e-6;
+        ctx.strokeStyle = isAxis ? 'rgba(148, 163, 184, 0.45)' : 'rgba(51, 65, 85, 0.35)';
+        ctx.lineWidth = isAxis ? 1.5 : 1;
+        ctx.beginPath();
+        ctx.moveTo(sx, 0);
+        ctx.lineTo(sx, h);
+        ctx.stroke();
+
+        if (!isAxis) {
+          const label = Number(gx.toFixed(6)).toString();
+          const labelY = Math.min(Math.max(originY + 6, 8), h - 20);
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.75)';
+          ctx.textAlign = 'center';
+          ctx.fillText(label, sx, labelY);
+        }
+      }
+
+      ctx.textBaseline = 'middle';
+      for (let gy = firstY; gy <= yMax; gy += step) {
+        const [, sy] = worldToScreen(0, gy, w, h);
+        const isAxis = Math.abs(gy) < step * 1e-6;
+        ctx.strokeStyle = isAxis ? 'rgba(148, 163, 184, 0.45)' : 'rgba(51, 65, 85, 0.35)';
+        ctx.lineWidth = isAxis ? 1.5 : 1;
+        ctx.beginPath();
+        ctx.moveTo(0, sy);
+        ctx.lineTo(w, sy);
+        ctx.stroke();
+
+        if (!isAxis) {
+          const label = Number(gy.toFixed(6)).toString();
+          const labelX = Math.min(Math.max(originX - 8, 28), w - 10);
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.75)';
+          ctx.textAlign = 'right';
+          ctx.fillText(label, labelX, sy);
+        }
+      }
+
+      // Plot Taylor Polynomial Tn(x)
+      if (state.layers.taylor && state.taylorAst) {
+        plotCurve(state.taylorAst, '#fbbf24', 2.25, [7, 5], w, h);
+      }
+
+      // Plot First Derivative f'(x)
+      if (state.layers.df && state.dfAst) {
+        plotCurve(state.dfAst, '#34d399', 2, [], w, h);
+      }
+
+      // Plot Primary Function f(x)
+      if (state.layers.f && state.fAst) {
+        plotCurve(state.fAst, '#818cf8', 3, [], w, h);
+      }
+
+      // Plot Tangent Line & Osculation Point at x0
+      if (state.layers.tangent && state.fAst && state.dfAst) {
+        const y0 = evalNumeric(state.fAst, state.x0);
+        const slope = evalNumeric(state.dfAst, state.x0);
+
+        if (Number.isFinite(y0)) {
+          const [px, py] = worldToScreen(state.x0, y0, w, h);
+
+          // Vertical guide line at x0
+          ctx.save();
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
+          ctx.setLineDash([4, 4]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(px, 0);
+          ctx.lineTo(px, h);
+          ctx.stroke();
+          ctx.restore();
+
+          // Tangent line if slope is finite
+          if (Number.isFinite(slope)) {
+            const yLeft = y0 + slope * (xMin - state.x0);
+            const yRight = y0 + slope * (xMax - state.x0);
+            const [lx, ly] = worldToScreen(xMin, yLeft, w, h);
+            const [rx, ry] = worldToScreen(xMax, yRight, w, h);
+
+            ctx.save();
+            ctx.strokeStyle = '#fb7185';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(lx, ly);
+            ctx.lineTo(rx, ry);
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // Glowing point marker at (x0, f(x0))
+          ctx.save();
+          ctx.fillStyle = 'rgba(244, 63, 94, 0.25)';
+          ctx.beginPath();
+          ctx.arc(px, py, 10, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#f43f5e';
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(px, py, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function updateHud() {
+      const fmt = (v) => (Number.isFinite(v) ? v.toFixed(4) : 'undef');
+      document.getElementById('hud-x').textContent = state.x0.toFixed(2);
+      document.getElementById('hud-y').textContent = fmt(evalNumeric(state.fAst, state.x0));
+      document.getElementById('hud-dy').textContent = fmt(evalNumeric(state.dfAst, state.x0));
+      document.getElementById('hud-ty').textContent = fmt(evalNumeric(state.taylorAst, state.x0));
+    }
+
+    // =========================================================================
+    // 5. Canvas Mouse, Wheel & Touch Interactions
+    // =========================================================================
+    let isDragging = false;
+    let activeMode = 'scrub';
+    let lastPos = { x: 0, y: 0 };
+
+    function setX0(newX) {
+      state.x0 = Math.round(newX * 100) / 100;
+      document.getElementById('x0-slider').value = Math.max(-6, Math.min(6, state.x0));
+      document.getElementById('x0-number').value = state.x0;
+      updatePointCalculations();
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      canvas.setPointerCapture(e.pointerId);
+      isDragging = true;
+      lastPos = { x: e.clientX, y: e.clientY };
+      activeMode = e.shiftKey || e.button === 2 ? 'pan' : state.dragMode;
+
+      if (activeMode === 'scrub') {
+        const rect = canvas.getBoundingClientRect();
+        const [wx] = screenToWorld(e.clientX - rect.left, 0, rect.width, rect.height);
+        setX0(wx);
+      }
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const rect = canvas.getBoundingClientRect();
+      if (activeMode === 'pan') {
+        const dx = e.clientX - lastPos.x;
+        const dy = e.clientY - lastPos.y;
+        state.view.cx -= dx / state.view.scale;
+        state.view.cy += dy / state.view.scale;
+        lastPos = { x: e.clientX, y: e.clientY };
+        drawCanvas();
+      } else {
+        const [wx] = screenToWorld(e.clientX - rect.left, 0, rect.width, rect.height);
+        setX0(wx);
+      }
+    });
+
+    canvas.addEventListener('pointerup', (e) => {
+      isDragging = false;
+      if (canvas.hasPointerCapture(e.pointerId)) {
+        canvas.releasePointerCapture(e.pointerId);
+      }
+    });
+
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const [wxBefore, wyBefore] = screenToWorld(mx, my, rect.width, rect.height);
+
+      const factor = e.deltaY < 0 ? 1.14 : 1 / 1.14;
+      state.view.scale = Math.max(12, Math.min(600, state.view.scale * factor));
+
+      const [wxAfter, wyAfter] = screenToWorld(mx, my, rect.width, rect.height);
+      state.view.cx += wxBefore - wxAfter;
+      state.view.cy += wyBefore - wyAfter;
+      drawCanvas();
+    }, { passive: false });
+
+    // UI Controls Wiring
+    document.getElementById('eval-btn').addEventListener('click', recomputeAll);
+    exprInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') recomputeAll();
+    });
+    document.getElementById('dismiss-error').addEventListener('click', hideError);
+
+    document.querySelectorAll('.preset-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        exprInput.value = btn.dataset.expr;
+        recomputeAll();
+      });
+    });
+
+    document.getElementById('x0-slider').addEventListener('input', (e) => setX0(parseFloat(e.target.value)));
+    document.getElementById('x0-number').addEventListener('change', (e) => {
+      const v = parseFloat(e.target.value);
+      if (Number.isFinite(v)) setX0(v);
+    });
+    document.getElementById('snap-zero').addEventListener('click', () => setX0(0));
+
+    document.getElementById('taylor-degree').addEventListener('input', (e) => {
+      state.taylorDegree = parseInt(e.target.value, 10);
+      document.getElementById('taylor-degree-val').textContent = `N = ${state.taylorDegree}`;
+      updatePointCalculations();
+    });
+
+    // Layer Toggle Buttons
+    const layerConfig = [
+      ['toggle-f', 'f', 'indigo'],
+      ['toggle-df', 'df', 'emerald'],
+      ['toggle-taylor', 'taylor', 'amber'],
+      ['toggle-tangent', 'tangent', 'rose'],
+    ];
+    layerConfig.forEach(([id, key, color]) => {
+      const btn = document.getElementById(id);
+      btn.addEventListener('click', () => {
+        state.layers[key] = !state.layers[key];
+        btn.classList.toggle('opacity-45', !state.layers[key]);
+        drawCanvas();
+      });
+    });
+
+    // Drag Mode & Zoom Buttons
+    const modeBtn = document.getElementById('mode-btn');
+    const modeLabel = document.getElementById('mode-label');
+    modeBtn.addEventListener('click', () => {
+      state.dragMode = state.dragMode === 'scrub' ? 'pan' : 'scrub';
+      modeLabel.textContent = state.dragMode === 'scrub' ? 'Scrub x₀' : 'Pan View';
+      modeLabel.className = state.dragMode === 'scrub' ? 'text-rose-300 font-semibold' : 'text-sky-300 font-semibold';
+      canvas.style.cursor = state.dragMode === 'scrub' ? 'crosshair' : 'grab';
+    });
+
+    document.getElementById('zoom-in').addEventListener('click', () => {
+      state.view.scale = Math.min(600, state.view.scale * 1.25);
+      drawCanvas();
+    });
+    document.getElementById('zoom-out').addEventListener('click', () => {
+      state.view.scale = Math.max(12, state.view.scale / 1.25);
+      drawCanvas();
+    });
+    document.getElementById('reset-view').addEventListener('click', () => {
+      state.view = { cx: 0, cy: 0, scale: 56 };
+      drawCanvas();
+    });
+
+    // AST Inspector Tabs
+    const tabTree = document.getElementById('tab-tree');
+    const tabJson = document.getElementById('tab-json');
+    tabTree.addEventListener('click', () => {
+      tabTree.className = 'px-2 py-0.5 rounded text-[11px] font-mono bg-indigo-600 text-white';
+      tabJson.className = 'px-2 py-0.5 rounded text-[11px] font-mono text-slate-400 hover:text-white';
+      astTreeView.classList.remove('hidden');
+      astJsonView.classList.add('hidden');
+    });
+    tabJson.addEventListener('click', () => {
+      tabJson.className = 'px-2 py-0.5 rounded text-[11px] font-mono bg-indigo-600 text-white';
+      tabTree.className = 'px-2 py-0.5 rounded text-[11px] font-mono text-slate-400 hover:text-white';
+      astJsonView.classList.remove('hidden');
+      astTreeView.classList.add('hidden');
+    });
+
+    // Clipboard copy using execCommand fallback for iframe compatibility
+    document.getElementById('copy-taylor').addEventListener('click', (e) => {
+      const text = outTaylor.textContent;
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      const btn = e.target;
+      btn.textContent = 'Copied!';
+      setTimeout(() => (btn.textContent = 'Copy'), 1200);
+    });
+
+    // Responsive Canvas ResizeObserver
+    new ResizeObserver(() => drawCanvas()).observe(canvasWrap);
+
+    // Initial computation & render
+    recomputeAll();
+  </script>
+</body>
+</html>
