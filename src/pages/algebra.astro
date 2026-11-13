@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NanoCAS Studio — Symbolic Calculus & Canvas Explorer</title>
   <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.10/tailwindcss.js"></script>
   <!-- Inter & JetBrains Mono Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -836,7 +836,8 @@
       const rect = canvasWrap.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       const w = rect.width;
-      const h = rect.height;
+      const MAX_HEIGHT = 800;
+      const h = Math.min(rect.height , MAX_HEIGHT);
       if (w === 0 || h === 0) return;
 
       if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
