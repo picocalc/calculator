@@ -33,7 +33,7 @@
     "tailwindcss": "4.3.5"
   },
   "devDependencies": {
-    "@astrojs/solid-js": "7.1.2",
+    "@astrojs/solid-js": "7.1.5",
     "@biomejs/biome": "2.6.6",
     "@gameroman/config": "0.3.0",
     "@tailwindcss/vite": "4.3.5",
