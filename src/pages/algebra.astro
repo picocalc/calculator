@@ -239,11 +239,12 @@
     let m;
     try {
       const params = new URLSearchParams(window.location.search);
-      const commit = params.get('commit') ?? 'b9f42ba';
+      const DEFAULT_COMMIT = '8903529';
+      const commit = params.get('commit') || DEFAULT_COMMIT;
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
       m = mod.parse ? mod : mod.default;
       badge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20';
-      badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> nanoalgebra@59a79b8';
+      badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> nanoalgebra@${commit}`;
     } catch (err) {
       badge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-rose-500/10 text-rose-300 border border-rose-500/20';
       badge.innerHTML = 'Failed to load nanoalgebra';
@@ -274,7 +275,7 @@
     // Template constructors backed by m.parse
     const op = (sym, a, b) => Object.assign(parse(`x${sym}y`), { left: clone(a), right: clone(b) });
     const fn = (name, ...args) => Object.assign(parse(`${name}(x)`), { args: args.map(clone) });
-    const HALF = new m.Evaluator().simplify(parse('1/2'));
+    const HALF = new m.simplify('1/2');
 
     const bigGcd = (a, b) => {
       a = a < 0n ? -a : a;
@@ -400,18 +401,6 @@
         // Strict unary functions
         if (args.length === 1) {
           const [a] = args;
-          if (name === 'abs') {
-            const r = toRat(a);
-            if (r !== null) {
-              return r[0] < 0n ? op('*', num(-1n), a) : a;
-            }
-          }
-          if (name === 'sqrt') {
-            if (a.type === 'POWER' && a.right.type === 'INTEGER' && a.right.value === 2n) {
-              return rewrite(fn('abs', a.left));
-            }
-            return rewrite(op('^', a, HALF));
-          }
           if (name === 'sin' && isZero(a)) return num(0n);
           if (name === 'cos' && isZero(a)) return num(1n);
           if (name === 'tan' && isZero(a)) return num(0n);
