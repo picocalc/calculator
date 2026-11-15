@@ -707,8 +707,13 @@
         const exactSub = simplify(substitute(state.fAst, { x: x0Node }));
         outExactVal.textContent = exactSub.print();
 
-        state.taylorAst = buildTaylor(state.fAst, x0Node, state.taylorDegree);
-        outTaylor.textContent = state.taylorAst.print();
+        if (state.layers.taylor) {
+          state.taylorAst = buildTaylor(state.fAst, x0Node, state.taylorDegree);
+          outTaylor.textContent = state.taylorAst.print();
+        } else {
+          state.taylorAst = null;
+          outTaylor.textContent = 'Hidden (layer off)';
+        }
       } catch (err) {
         outExactVal.textContent = '—';
       }
