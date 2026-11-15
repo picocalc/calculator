@@ -239,7 +239,7 @@
     let m;
     try {
       const params = new URLSearchParams(window.location.search);
-      const DEFAULT_COMMIT = '2c5005d';
+      const DEFAULT_COMMIT = '81696c3';
       const commit = params.get('commit') || DEFAULT_COMMIT;
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
       m = mod.parse ? mod : mod.default;
@@ -777,7 +777,14 @@
       return 10 * mag;
     }
 
-    function plotCurve(ast, color, width, dash, w, h) {
+    function evalInDomain(targetAst, x, domainAst = null) {
+      if (domainAst && !Number.isFinite(evalNumeric(domainAst, x))) {
+        return NaN;
+      }
+      return evalNumeric(targetAst, x);
+    }
+
+    function plotCurve(ast, color, width, dash, w, h, domainAst = null) {
       if (!ast) return;
       ctx.save();
       ctx.strokeStyle = color;
@@ -794,7 +801,7 @@
       for (let i = 0; i <= samples; i++) {
         const sx = (i / samples) * w;
         const [wx] = screenToWorld(sx, 0, w, h);
-        const wy = evalNumeric(ast, wx);
+        const wy = evalInDomain(ast, wx, domainAst);
 
         if (!Number.isFinite(wy)) {
           penDown = false;
@@ -900,7 +907,7 @@
 
       // Plot First Derivative f'(x)
       if (state.layers.df && state.dfAst) {
-        plotCurve(state.dfAst, '#34d399', 2, [], w, h);
+        plotCurve(state.dfAst, '#34d399', 2, [], w, h, state.fAst);
       }
 
       // Plot Primary Function f(x)
@@ -969,7 +976,7 @@
       const fmt = (v) => (Number.isFinite(v) ? v.toFixed(4) : 'undef');
       document.getElementById('hud-x').textContent = state.x0.toFixed(2);
       document.getElementById('hud-y').textContent = fmt(evalNumeric(state.fAst, state.x0));
-      document.getElementById('hud-dy').textContent = fmt(evalNumeric(state.dfAst, state.x0));
+      document.getElementById('hud-dy').textContent = fmt(evalInDomain(state.dfAst, state.x0, state.fAst));
       document.getElementById('hud-ty').textContent = fmt(evalNumeric(state.taylorAst, state.x0));
     }
 
