@@ -3,6 +3,7 @@
   "type": "module",
   "imports": {
     "#app": "./src/components/App.tsx",
+    "#components/*": "./src/components/*.astro",
     "#layout": "./src/layouts/Layout.astro",
     "#styles": "./src/styles/global.css"
   },

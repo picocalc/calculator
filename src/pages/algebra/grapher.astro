@@ -239,8 +239,9 @@
     let m;
     try {
       const params = new URLSearchParams(window.location.search);
-      const DEFAULT_COMMIT = '81696c3';
+      const DEFAULT_COMMIT = 'a6b06f5';
       const commit = params.get('commit') || DEFAULT_COMMIT;
+      if (commit?.length !== 7) throw new Error('Invalid `commit` param');
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
       m = mod.parse ? mod : mod.default;
       badge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20';
