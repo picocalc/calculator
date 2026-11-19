@@ -7,6 +7,9 @@ export default defineConfig({
   integrations: [
     solid(),
     AstroPWAIntegration({
+      workbox: {
+        navigateFallbackDenylist: [/^\/github/],
+      },
       manifest: {
         name: "Calculator",
         short_name: "Calculator",
