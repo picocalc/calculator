@@ -7,9 +7,6 @@ export default defineConfig({
   integrations: [
     solid(),
     AstroPWAIntegration({
-      workbox: {
-        navigateFallbackDenylist: [/^\/github/],
-      },
       manifest: {
         name: "Calculator",
         short_name: "Calculator",
@@ -18,6 +15,12 @@ export default defineConfig({
           { src: "icons/192x192.png", sizes: "192x192", type: "image/png" },
           { src: "icons/512x512.png", sizes: "512x512", type: "image/png" },
         ],
+      },
+      workbox: {
+        navigateFallbackDenylist: [/^\/github/],
+      },
+      experimental: {
+        directoryAndTrailingSlashHandler: true,
       },
     }),
   ],
