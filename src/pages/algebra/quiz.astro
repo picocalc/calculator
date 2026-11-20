@@ -556,7 +556,7 @@
 
     try {
       const params = new URLSearchParams(window.location.search);
-      const DEFAULT_COMMIT = 'a6b06f5';
+      const DEFAULT_COMMIT = '2d796ca';
       const commit = params.get('commit') || DEFAULT_COMMIT;
       if (commit?.length !== 7) throw new Error('Invalid `commit` param');
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
@@ -766,7 +766,7 @@
           if (name === "pi") return { re: Math.PI, im: 0 };
           if (name === "e") return { re: Math.E, im: 0 };
           if (name === "i") return { re: 0, im: 1 };
-          if (Object.prototype.hasOwnProperty.call(env, name)) {
+          if (Object.hasOwn(env, name)) {
             const val = env[name];
             return typeof val === "number" ? { re: val, im: 0 } : val;
           }
@@ -1094,8 +1094,8 @@
             const p = pick([1, 2, 3]);
             const neg = Math.random() < 0.7;
             const expStr = `${neg ? "-" : ""}\\frac{${p}}{${m}}`;
-            const resNum = neg ? Math.pow(item.rootD, p) : Math.pow(item.rootN, p);
-            const resDen = neg ? Math.pow(item.rootN, p) : Math.pow(item.rootD, p);
+            const resNum = neg ? item.rootD ** p : item.rootN ** p;
+            const resDen = neg ? item.rootN ** p : item.rootD ** p;
             const ans = fmtFrac(resNum, resDen);
             return {
               topicId, tier: "A-Level Pure", topicName: "Indices & Surds",
@@ -1132,7 +1132,7 @@
           }
           const base = pick([2, 3, 4, 5]);
           const p = randInt(2, 3);
-          const targetPow = Math.pow(base, p);
+          const targetPow = base ** p;
           const xAns = chainVal !== null ? (Math.abs(chainVal) % 6) + 1 : randInt(2, 7);
           const m = pick([2, 3, 4]);
           const c = targetPow - m * xAns;
@@ -1483,7 +1483,7 @@
         if (!raw) return { settings: { ...DEFAULT_SETTINGS }, bests: {} };
         const parsed = JSON.parse(raw);
         return {
-          settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
+          settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
           bests: parsed.bests || {}
         };
       } catch (_) {

@@ -239,7 +239,7 @@
     let m;
     try {
       const params = new URLSearchParams(window.location.search);
-      const DEFAULT_COMMIT = 'a6b06f5';
+      const DEFAULT_COMMIT = '2d796ca';
       const commit = params.get('commit') || DEFAULT_COMMIT;
       if (commit?.length !== 7) throw new Error('Invalid `commit` param');
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
@@ -344,7 +344,7 @@
     // Substitute symbols with AST nodes
     function substitute(node, env) {
       if (!node || typeof node !== 'object') return node;
-      if (node.type === 'SYMBOL' && Object.prototype.hasOwnProperty.call(env, node.name)) {
+      if (node.type === 'SYMBOL' && Object.hasOwn(env, node.name)) {
         return clone(env[node.name]);
       }
       const c = Object.assign(Object.create(Object.getPrototypeOf(node)), node);
@@ -442,41 +442,12 @@
       return node;
     }
 
-    // Flatten ADD chains and combine all numeric constants (INTEGER, FRACTION, DECIMAL)
-    function foldAdds(node, ev) {
-      if (!node || typeof node !== 'object') return node;
-      if ('left' in node) node.left = foldAdds(node.left, ev);
-      if ('right' in node) node.right = foldAdds(node.right, ev);
-      if (Array.isArray(node.args)) node.args = node.args.map((a) => foldAdds(a, ev));
-      if (node.type !== 'ADD') return node;
-
-      const terms = [];
-      (function collect(x) {
-        if (x.type === 'ADD') {
-          collect(x.left);
-          collect(x.right);
-        } else {
-          terms.push(x);
-        }
-      })(node);
-
-      const nums = terms.filter((t) => toRat(t) !== null);
-      if (nums.length < 2) return node;
-
-      const rest = terms.filter((t) => toRat(t) === null);
-      const sum = nums.reduce((acc, cur) => ev.simplify(op('+', acc, cur)));
-      const all = isZero(sum) ? rest : [...rest, sum];
-      return all.length ? all.reduce((acc, cur) => op('+', acc, cur)) : num(0n);
-    }
-
     function simplify(input) {
       const ev = new m.Evaluator();
       const ast = typeof input === 'string' ? parse(input) : clone(input);
       const pass1 = ev.simplify(ast);
       const pass2 = rewrite(pass1);
-      const pass3 = ev.simplify(pass2);
-      const pass4 = foldAdds(pass3, ev);
-      return ev.simplify(pass4);
+      return ev.simplify(pass2);
     }
 
     // Symbolic differentiation engine
@@ -580,7 +551,7 @@
         case 'FRACTION':
           return Number(node.numerator) / Number(node.denominator);
         case 'DECIMAL':
-          return Number(node.whole) * Math.pow(10, Number(node.exponent));
+          return Number(node.whole) * 10 ** Number(node.exponent);
         case 'SYMBOL':
           if (node.name === 'x') return xVal;
           if (node.name === 'e') return Math.E;
@@ -599,7 +570,7 @@
         case 'POWER': {
           const base = evalNumeric(node.left, xVal);
           const exp = evalNumeric(node.right, xVal);
-          return Math.pow(base, exp);
+          return base ** exp;
         }
         case 'FUNCTION': {
           const vals = node.args.map((a) => evalNumeric(a, xVal));
@@ -775,7 +746,7 @@
     function niceStep(pixelsPerUnit) {
       const targetPx = 75;
       const rawStep = targetPx / pixelsPerUnit;
-      const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const mag = 10 ** Math.floor(Math.log10(rawStep));
       const norm = rawStep / mag;
       if (norm < 1.5) return 1 * mag;
       if (norm < 3.5) return 2 * mag;

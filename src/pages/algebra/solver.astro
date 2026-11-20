@@ -202,7 +202,7 @@
     let m;
     try {
       const params = new URLSearchParams(window.location.search);
-      const DEFAULT_COMMIT = 'a6b06f5';
+      const DEFAULT_COMMIT = '2d796ca';
       const commit = params.get('commit') || DEFAULT_COMMIT;
       if (commit?.length !== 7) throw new Error('Invalid `commit` param');
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
@@ -445,33 +445,6 @@
       return node;
     }
 
-    // Flatten ADD chains and combine numeric constants
-    function foldAdds(node, ev) {
-      if (!node || typeof node !== 'object') return node;
-      if ('left' in node) node.left = foldAdds(node.left, ev);
-      if ('right' in node) node.right = foldAdds(node.right, ev);
-      if (Array.isArray(node.args)) node.args = node.args.map((a) => foldAdds(a, ev));
-      if (node.type !== 'ADD') return node;
-
-      const terms = [];
-      (function collect(x) {
-        if (x.type === 'ADD') {
-          collect(x.left);
-          collect(x.right);
-        } else {
-          terms.push(x);
-        }
-      })(node);
-
-      const nums = terms.filter((t) => toRat(t) !== null);
-      if (nums.length < 2) return node;
-
-      const rest = terms.filter((t) => toRat(t) === null);
-      const sum = nums.reduce((acc, cur) => ev.simplify(op('+', acc, cur)));
-      const all = isZero(sum) ? rest : [...rest, sum];
-      return all.length ? all.reduce((acc, cur) => op('+', acc, cur)) : num(0n);
-    }
-
     function simplify(input) {
       const ev = new m.Evaluator();
       const ast = typeof input === 'string' ? parse(input) : clone(input);
@@ -479,7 +452,6 @@
       cur = rewrite(cur);
       cur = ev.simplify(cur);
       cur = distributeDiv(cur, ev);
-      cur = foldAdds(cur, ev);
       return ev.simplify(cur);
     }
 
