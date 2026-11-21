@@ -237,7 +237,7 @@
 
     const op = (sym, a, b) => Object.assign(parse(`x${sym}y`), { left: clone(a), right: clone(b) });
     const fn = (name, ...args) => Object.assign(parse(`${name}(x)`), { args: args.map(clone) });
-    const HALF = new m.Evaluator().simplify(parse('1/2'));
+    const HALF = m.simplify('1/2');
 
     const bigGcd = (a, b) => {
       a = a < 0n ? -a : a;
