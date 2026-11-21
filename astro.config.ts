@@ -16,6 +16,12 @@ export default defineConfig({
           { src: "icons/512x512.png", sizes: "512x512", type: "image/png" },
         ],
       },
+      workbox: {
+        navigateFallbackDenylist: [/^\/github/],
+      },
+      experimental: {
+        directoryAndTrailingSlashHandler: true,
+      },
     }),
   ],
   vite: { plugins: [tailwindcss()], build: { cssTarget: "safari15" } },

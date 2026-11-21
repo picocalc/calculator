@@ -1,0 +1,22 @@
+---
+import "#styles";
+
+import LinkCard from "#components/LinkCard";
+import LinkCardGroup from "#components/LinkCardGroup";
+import Layout from "#layout";
+
+const title = "Calculators";
+const description = "Calculator by Roman";
+---
+
+<Layout {title} {description}>
+  <LinkCardGroup>
+    <LinkCard title="Calculator" href="/" />
+
+    <LinkCard title="Grapher" href="/algebra/grapher" />
+    <LinkCard title="Quiz" href="/algebra/quiz" />
+    <LinkCard title="Solver" href="/algebra/solver" />
+
+    <LinkCard title="Source code" href="/github" />
+  </LinkCardGroup>
+</Layout>
