@@ -239,7 +239,7 @@
     let m;
     try {
       const params = new URLSearchParams(window.location.search);
-      const DEFAULT_COMMIT = '2d796ca';
+      const DEFAULT_COMMIT = '7e426f5';
       const commit = params.get('commit') || DEFAULT_COMMIT;
       if (commit?.length !== 7) throw new Error('Invalid `commit` param');
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
