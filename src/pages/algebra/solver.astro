@@ -430,8 +430,7 @@
       if ('right' in node) node.right = distributeDiv(node.right, ev);
       if (Array.isArray(node.args)) node.args = node.args.map((a) => distributeDiv(a, ev));
 
-      if (node.type === 'DIVIDE' && toRat(node.right) !== null && !isZero(node.right)) {
-        if (node.left.type === 'ADD' || node.left.type === 'SUBTRACT') {
+      if (node.type === 'DIVIDE' && toRat(node.right) !== null && !isZero(node.right) && (node.left.type === 'ADD' || node.left.type === 'SUBTRACT')) {
           const sym = node.left.type === 'ADD' ? '+' : '-';
           return ev.simplify(
             op(
@@ -441,7 +440,6 @@
             )
           );
         }
-      }
       return node;
     }
 
@@ -505,7 +503,7 @@
         case 'FRACTION':
           return Number(node.numerator) / Number(node.denominator);
         case 'DECIMAL':
-          return Number(node.whole) * Math.pow(10, Number(node.exponent));
+          return Number(node.whole) * 10 ** Number(node.exponent);
         case 'SYMBOL':
           if (node.name === v) return val;
           if (node.name === 'e') return Math.E;
@@ -522,7 +520,7 @@
           return den === 0 ? NaN : evalNumeric(node.left, v, val) / den;
         }
         case 'POWER':
-          return Math.pow(evalNumeric(node.left, v, val), evalNumeric(node.right, v, val));
+          return evalNumeric(node.left, v, val) ** evalNumeric(node.right, v, val);
         case 'FUNCTION': {
           const vals = node.args.map((a) => evalNumeric(a, v, val));
           switch (node.name) {
@@ -973,8 +971,7 @@
         const curX = minX + i * dx;
         const curY = f(curX);
 
-        if (Number.isFinite(prevY) && Number.isFinite(curY)) {
-          if (Math.abs(curY) < 1e-12 || prevY * curY < 0) {
+        if (Number.isFinite(prevY) && Number.isFinite(curY) && (Math.abs(curY) < 1e-12 || prevY * curY < 0)) {
             // Polish with hybrid Newton + Bisection
             let lo = prevX;
             let hi = curX;
@@ -996,7 +993,6 @@
               found.push(x);
             }
           }
-        }
         prevX = curX;
         prevY = curY;
       }
@@ -1191,7 +1187,7 @@
 
     function niceStep(pixelsPerUnit) {
       const rawStep = 75 / pixelsPerUnit;
-      const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const mag = 10 ** Math.floor(Math.log10(rawStep));
       const norm = rawStep / mag;
       if (norm < 1.5) return 1 * mag;
       if (norm < 3.5) return 2 * mag;
