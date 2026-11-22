@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>A-Level & FM Speed Studio • NanoAlgebra</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.10/tailwindcss.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            brand: {
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+            },
+            accent: {
+              400: '#a78bfa',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- KaTeX for publication-grade math rendering (with multi-CDN fallback for local exports) -->
+  <link id="katex-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css';" />
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js';"></script>
+
+  <style>
+    /* Smooth custom scrollbars & mobile tap ergonomics */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      overscroll-behavior-y: contain;
+    }
+    .katex-display {
+      margin: 0.35em 0 !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+    .animate-shake {
+      animation: shake 0.32s ease-in-out;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.96); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes floatDelta {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-22px); opacity: 0; }
+    }
+    .animate-delta {
+      animation: floatDelta 0.85s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans min-h-[100dvh] flex flex-col selection:bg-sky-500/30">
+
+  <!-- Top Navigation & Engine Status Bar -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-slate-950/85 border-b border-slate-200/80 dark:border-slate-800/80">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
+      <!-- Brand + NanoAlgebra Badge -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-violet-600 flex items-center justify-center text-white font-mono font-bold text-lg shadow-sm shrink-0">
+          ∑
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-sm sm:text-base tracking-tight truncate">Y13 Math & FM Sprint</h1>
+            <span id="engine-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              nanoalgebra
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block truncate">
+            Rapid Numerical + A-Level Pure & Further Pure Fluency
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Action Controls -->
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <!-- Sound Toggle -->
+        <button id="btn-sound" type="button" title="Toggle Synth Feedback"
+          class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/70 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300">
+          <svg id="icon-sound-on" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+          </svg>
+          <svg id="icon-sound-off" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
+          </svg>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="btn-theme" type="button" title="Toggle Light/Dark Theme"
+          class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-900/70 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition text-slate-600 dark:text-slate-300">
+          <svg id="icon-sun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg id="icon-moon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+
+        <!-- Customise Syllabus & Rules Button -->
+        <button id="btn-settings" type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:opacity-90 transition shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+          </svg>
+          <span>Customise</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-4">
+
+    <!-- 4-Mode Segmented Toggle Bar -->
+    <section aria-label="Drill Mode Selector" class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-sm">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5" id="mode-toggle-group">
+        <button type="button" data-mode="sprint"
+          class="mode-btn flex flex-col items-start sm:items-center justify-center px-3 py-2.5 rounded-xl text-left sm:text-center transition font-medium">
+          <span class="text-xs sm:text-sm font-bold flex items-center gap-1.5">
+            <span>⚡ Timed Sprint</span>
+          </span>
+          <span class="text-[11px] opacity-75">Fixed clock blitz</span>
+        </button>
+
+        <button type="button" data-mode="timedelta"
+          class="mode-btn flex flex-col items-start sm:items-center justify-center px-3 py-2.5 rounded-xl text-left sm:text-center transition font-medium">
+          <span class="text-xs sm:text-sm font-bold flex items-center gap-1.5">
+            <span>⏱️ Time-Delta</span>
+          </span>
+          <span class="text-[11px] opacity-75">+4s hit / -8s miss</span>
+        </button>
+
+        <button type="button" data-mode="pipeline"
+          class="mode-btn flex flex-col items-start sm:items-center justify-center px-3 py-2.5 rounded-xl text-left sm:text-center transition font-medium">
+          <span class="text-xs sm:text-sm font-bold flex items-center gap-1.5">
+            <span>🔗 Chain Pipeline</span>
+          </span>
+          <span class="text-[11px] opacity-75">3-step exam flow</span>
+        </button>
+
+        <button type="button" data-mode="zen"
+          class="mode-btn flex flex-col items-start sm:items-center justify-center px-3 py-2.5 rounded-xl text-left sm:text-center transition font-medium">
+          <span class="text-xs sm:text-sm font-bold flex items-center gap-1.5">
+            <span>🎯 Zen Practice</span>
+          </span>
+          <span class="text-[11px] opacity-75">Untimed + solutions</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Live Telemetry HUD -->
+    <section class="grid grid-cols-4 gap-2 sm:gap-3">
+      <!-- Timer / Stopwatch -->
+      <div class="relative bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-4 flex flex-col justify-between">
+        <span id="hud-timer-label" class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Time Left</span>
+        <div class="flex items-baseline gap-1.5 mt-1">
+          <span id="hud-timer" class="font-mono text-xl sm:text-2xl font-bold text-sky-600 dark:text-sky-400">90.0s</span>
+          <span id="hud-delta-pop" class="font-mono text-xs font-bold pointer-events-none"></span>
+        </div>
+      </div>
+
+      <!-- Score / Solved -->
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-4 flex flex-col justify-between">
+        <span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Solved</span>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span id="hud-solved" class="font-mono text-xl sm:text-2xl font-bold">0</span>
+          <span id="hud-spm" class="text-xs font-mono text-slate-400 hidden sm:inline">0.0/m</span>
+        </div>
+      </div>
+
+      <!-- Streak & Multiplier -->
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-4 flex flex-col justify-between">
+        <span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Streak</span>
+        <div class="flex items-baseline gap-1.5 mt-1">
+          <span id="hud-streak" class="font-mono text-xl sm:text-2xl font-bold text-amber-500">0</span>
+          <span id="hud-mult" class="text-xs font-mono font-semibold text-amber-500/80">1×</span>
+        </div>
+      </div>
+
+      <!-- Accuracy -->
+      <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-4 flex flex-col justify-between">
+        <span class="text-[11px] uppercase tracking-wider font-semibold text-slate-400">Accuracy</span>
+        <div class="flex items-baseline gap-1.5 mt-1">
+          <span id="hud-accuracy" class="font-mono text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">100%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active Drill Stage Card -->
+    <section id="drill-card" class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-7 shadow-sm flex-1 flex flex-col justify-between transition-colors">
+
+      <!-- Ready / Start Overlay (shown before timed runs start) -->
+      <div id="start-overlay" class="hidden flex-1 flex flex-col items-center justify-center text-center py-6 px-2 gap-5 animate-pop">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+          <span id="ready-preset-label">Year 13 Full Mix • 8 Topics Active</span>
+        </div>
+        <div class="max-w-lg space-y-2">
+          <h2 id="ready-mode-title" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Timed Sprint (90s)</h2>
+          <p id="ready-mode-desc" class="text-sm sm:text-base text-slate-500 dark:text-slate-400">
+            High-velocity rapid arithmetic blended with A-Level Pure and Further Pure micro-drills. Exact fractions, surds, and complex expressions validated via <code class="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">nanoalgebra</code>.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <button id="btn-start-run" type="button"
+            class="px-7 py-3.5 rounded-2xl font-bold text-base bg-gradient-to-r from-sky-500 to-violet-600 text-white shadow-lg shadow-sky-500/20 hover:opacity-95 active:scale-[0.99] transition">
+            Start Drill (Enter)
+          </button>
+          <button id="btn-ready-customise" type="button"
+            class="px-5 py-3.5 rounded-2xl font-semibold text-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            Configure Topics
+          </button>
+        </div>
+        <div id="ready-pb-badge" class="text-xs font-mono text-slate-400">
+          Personal Best: —
+        </div>
+      </div>
+
+      <!-- Post-Run Analytics Summary Overlay -->
+      <div id="summary-overlay" class="hidden flex-1 flex flex-col justify-between gap-5 py-2 animate-pop">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-violet-500">Session Complete</span>
+            <h2 id="summary-title" class="text-2xl font-extrabold mt-0.5">Sprint Debrief</h2>
+            <p id="summary-subtitle" class="text-xs font-mono text-slate-400 mt-1"></p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-drill-weakest" type="button"
+              class="hidden px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition">
+              Drill Weakest Topic
+            </button>
+            <button id="btn-restart-run" type="button"
+              class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-sky-500 text-white hover:bg-sky-600 transition shadow-sm">
+              Run Again
+            </button>
+          </div>
+        </div>
+
+        <!-- Core Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/70 dark:border-slate-800">
+            <div class="text-xs text-slate-400">Total Solved</div>
+            <div id="sum-solved" class="font-mono text-2xl font-bold mt-1">0</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/70 dark:border-slate-800">
+            <div class="text-xs text-slate-400">Speed (SPM)</div>
+            <div id="sum-spm" class="font-mono text-2xl font-bold text-sky-500 mt-1">0.0</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/70 dark:border-slate-800">
+            <div class="text-xs text-slate-400">Accuracy</div>
+            <div id="sum-acc" class="font-mono text-2xl font-bold text-emerald-500 mt-1">100%</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/70 dark:border-slate-800">
+            <div class="text-xs text-slate-400">Best Streak</div>
+            <div id="sum-streak" class="font-mono text-2xl font-bold text-amber-500 mt-1">0</div>
+          </div>
+        </div>
+
+        <!-- Topic Breakdown Table -->
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Topic Telemetry</h3>
+          <div id="sum-topic-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Question Workspace -->
+      <div id="question-workspace" class="flex-1 flex flex-col justify-between gap-4">
+        <!-- Top Meta Row: Syllabus Tag + Pipeline Progress + Actions -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="q-tier-badge" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
+              A-Level Pure
+            </span>
+            <span id="q-topic-badge" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              Quadratics
+            </span>
+            <span id="q-step-timer" class="font-mono text-xs text-slate-400">0.0s</span>
+          </div>
+
+          <!-- Chain Pipeline 3-Step Indicator (visible in Pipeline mode) -->
+          <div id="pipeline-tracker" class="hidden items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl">
+            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mr-1">CHAIN:</span>
+            <span id="pipe-step-1" class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-sky-500 text-white">1</span>
+            <span class="text-slate-400 text-xs">→</span>
+            <span id="pipe-step-2" class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-slate-200 dark:bg-slate-700 text-slate-500">2</span>
+            <span class="text-slate-400 text-xs">→</span>
+            <span id="pipe-step-3" class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-slate-200 dark:bg-slate-700 text-slate-500">3</span>
+            <span id="pipe-carry-badge" class="hidden ml-1.5 px-2 py-0.5 rounded-md text-xs font-mono bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30"></span>
+          </div>
+
+          <!-- Quick Question Controls -->
+          <div class="flex items-center gap-1.5">
+            <button id="btn-show-solution" type="button"
+              class="px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              Method / Hint
+            </button>
+            <button id="btn-skip-question" type="button"
+              class="px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              Skip
+            </button>
+            <button id="btn-finish-session" type="button"
+              class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition">
+              Finish
+            </button>
+          </div>
+        </div>
+
+        <!-- Prompt Display Box -->
+        <div class="my-auto py-3 sm:py-5 px-3 sm:px-6 rounded-2xl bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800/80 text-center flex flex-col items-center justify-center min-h-[135px] sm:min-h-[160px]">
+          <p id="q-instruction" class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">
+            Evaluate mentally:
+          </p>
+          <div id="q-math-display" class="text-xl sm:text-3xl font-semibold text-slate-900 dark:text-white max-w-full overflow-x-auto py-1">
+            <!-- KaTeX equation renders here -->
+          </div>
+          <p id="q-format-hint" class="text-[11px] font-mono text-slate-400 mt-2">
+            Enter exact simplified expression
+          </p>
+        </div>
+
+        <!-- Answer Input Area (Supports Single Slot, Pair Slots, and 2x2 Matrix Slots) -->
+        <div class="space-y-3">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            <!-- Mode A: Single Expression Input -->
+            <div id="input-mode-single" class="flex-1">
+              <input id="ans-single" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                placeholder="Type exact answer (e.g. -3/4, 2sqrt(3), 5 - 2i)..."
+                class="math-slot w-full px-4 py-3.5 rounded-2xl font-mono text-base sm:text-lg bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 focus:border-sky-500 dark:focus:border-sky-400 focus:outline-none transition" />
+            </div>
+
+            <!-- Mode B: Two-Slot Pair Input (e.g. Partial Fractions A & B, Complex r & theta, Completed Square p & q) -->
+            <div id="input-mode-pair" class="hidden flex-1 grid grid-cols-2 gap-2.5">
+              <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 focus-within:border-sky-500 rounded-2xl px-3 py-2">
+                <span id="pair-label-1" class="font-mono text-sm font-bold text-slate-400 shrink-0">A =</span>
+                <input id="ans-pair-1" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                  placeholder="Slot 1"
+                  class="math-slot w-full bg-transparent font-mono text-base sm:text-lg focus:outline-none" />
+              </div>
+              <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 focus-within:border-sky-500 rounded-2xl px-3 py-2">
+                <span id="pair-label-2" class="font-mono text-sm font-bold text-slate-400 shrink-0">B =</span>
+                <input id="ans-pair-2" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                  placeholder="Slot 2"
+                  class="math-slot w-full bg-transparent font-mono text-base sm:text-lg focus:outline-none" />
+              </div>
+            </div>
+
+            <!-- Mode C: 2x2 Matrix Grid Input -->
+            <div id="input-mode-matrix" class="hidden flex-1 flex items-center justify-center">
+              <div class="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-slate-50 dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800">
+                <span class="text-3xl font-light text-slate-400 select-none">(</span>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="ans-mat-00" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="a₁₁"
+                    class="math-slot w-20 sm:w-24 px-2.5 py-2 rounded-xl text-center font-mono text-sm sm:text-base bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-sky-500 focus:outline-none" />
+                  <input id="ans-mat-01" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="a₁₂"
+                    class="math-slot w-20 sm:w-24 px-2.5 py-2 rounded-xl text-center font-mono text-sm sm:text-base bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-sky-500 focus:outline-none" />
+                  <input id="ans-mat-10" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="a₂₁"
+                    class="math-slot w-20 sm:w-24 px-2.5 py-2 rounded-xl text-center font-mono text-sm sm:text-base bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-sky-500 focus:outline-none" />
+                  <input id="ans-mat-11" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="a₂₂"
+                    class="math-slot w-20 sm:w-24 px-2.5 py-2 rounded-xl text-center font-mono text-sm sm:text-base bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-sky-500 focus:outline-none" />
+                </div>
+                <span class="text-3xl font-light text-slate-400 select-none">)</span>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button id="btn-submit-answer" type="button"
+              class="px-6 py-3.5 rounded-2xl font-bold text-sm sm:text-base bg-sky-500 hover:bg-sky-600 active:scale-[0.99] text-white shadow-sm transition shrink-0">
+              Check ↵
+            </button>
+          </div>
+
+          <!-- Live NanoAlgebra AST Preview & Diagnostic Feedback Row -->
+          <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/70 dark:border-slate-800/70 text-xs min-h-[38px]">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="font-mono text-[11px] uppercase tracking-wider text-slate-400 shrink-0">AST Parsed:</span>
+              <span id="live-ast-preview" class="font-mono text-slate-700 dark:text-slate-200 truncate">Waiting for input...</span>
+            </div>
+            <div id="feedback-banner" class="font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+              Press Enter to submit
+            </div>
+          </div>
+
+          <!-- Worked Method / Solution Box (Toggleable) -->
+          <div id="solution-box" class="hidden p-3.5 rounded-2xl bg-violet-500/5 border border-violet-500/20 text-xs sm:text-sm text-slate-700 dark:text-slate-200 space-y-1 animate-pop">
+            <div class="font-bold text-violet-600 dark:text-violet-400 text-xs uppercase tracking-wider">Worked Method</div>
+            <div id="solution-content" class="overflow-x-auto py-1"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mobile-Ergonomic On-Screen Math Keypad -->
+    <section id="mobile-keypad" aria-label="Math Symbol Keypad" class="bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-sm">
+      <div class="grid grid-cols-6 sm:grid-cols-12 gap-1.5 font-mono text-xs sm:text-sm font-semibold">
+        <button type="button" data-insert="-" class="kp-btn py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition">−</button>
+        <button type="button" data-insert="+" class="kp-btn py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition">+</button>
+        <button type="button" data-insert="/" class="kp-btn py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition">/</button>
+        <button type="button" data-insert="^" class="kp-btn py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition">^</button>
+        <button type="button" data-insert="(" class="kp-btn py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition">(</button>
+        <button type="button" data-insert=")" class="kp-btn py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition">)</button>
+        <button type="button" data-insert="sqrt(" class="kp-btn py-2.5 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 active:scale-95 transition">√(</button>
+        <button type="button" data-insert="pi" class="kp-btn py-2.5 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 active:scale-95 transition">π</button>
+        <button type="button" data-insert="i" class="kp-btn py-2.5 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 active:scale-95 transition">i</button>
+        <button type="button" data-insert="e" class="kp-btn py-2.5 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 active:scale-95 transition">e</button>
+        <button type="button" data-action="backspace" class="kp-btn py-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 active:scale-95 transition">⌫</button>
+        <button type="button" data-action="clear" class="kp-btn py-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 active:scale-95 transition">CLR</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Customise Syllabus & Difficulty Modal -->
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full max-h-[90dvh] flex flex-col shadow-2xl animate-pop">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-extrabold">Customise Year 13 Syllabus & Rules</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Tailor A-Level Pure, Further Pure, and Quant speed parameters</p>
+        </div>
+        <button id="btn-close-settings" type="button" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 overflow-y-auto space-y-5 text-sm">
+        <!-- Quick Presets -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Quick Syllabus Presets</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button type="button" data-preset="all" class="preset-btn px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 hover:border-sky-500 transition">
+              Full Y13 Mix
+            </button>
+            <button type="button" data-preset="pure" class="preset-btn px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 hover:border-sky-500 transition">
+              A-Level Pure Only
+            </button>
+            <button type="button" data-preset="further" class="preset-btn px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 hover:border-sky-500 transition">
+              Further Pure Only
+            </button>
+            <button type="button" data-preset="quant" class="preset-btn px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-800 hover:border-sky-500 transition">
+              Rapid Numerical
+            </button>
+          </div>
+        </div>
+
+        <!-- Topic Toggles -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Active Drill Modules</label>
+            <span id="active-topic-count" class="text-xs font-mono text-sky-500">8 / 8 enabled</span>
+          </div>
+          <div id="topic-toggles-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Difficulty & Timer Parameters -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="space-y-1.5">
+            <label for="cfg-difficulty" class="text-xs font-bold uppercase tracking-wider text-slate-400">Difficulty Tier</label>
+            <select id="cfg-difficulty" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-medium text-xs sm:text-sm">
+              <option value="standard">Standard Fluency</option>
+              <option value="exam" selected>Year 13 Exam (Default)</option>
+              <option value="olympiad">FM High-Gear</option>
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="cfg-sprint-sec" class="text-xs font-bold uppercase tracking-wider text-slate-400">Sprint Duration</label>
+            <select id="cfg-sprint-sec" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-medium text-xs sm:text-sm">
+              <option value="60">60 Seconds</option>
+              <option value="90" selected>90 Seconds (Default)</option>
+              <option value="120">120 Seconds</option>
+              <option value="180">3 Minutes</option>
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="cfg-delta-rule" class="text-xs font-bold uppercase tracking-wider text-slate-400">Time-Delta Rule</label>
+            <select id="cfg-delta-rule" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-medium text-xs sm:text-sm">
+              <option value="4,-8" selected>+4s Hit / -8s Miss (45s)</option>
+              <option value="5,-5">+5s Hit / -5s Miss (60s)</option>
+              <option value="3,-10">+3s Hit / -10s Miss (30s)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Interface Toggles -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+          <label class="inline-flex items-center gap-2.5 cursor-pointer">
+            <input id="cfg-show-keypad" type="checkbox" checked class="w-4 h-4 rounded accent-sky-500" />
+            <span class="text-xs sm:text-sm font-medium">Show On-Screen Math Keypad</span>
+          </label>
+          <label class="inline-flex items-center gap-2.5 cursor-pointer">
+            <input id="cfg-auto-advance" type="checkbox" checked class="w-4 h-4 rounded accent-sky-500" />
+            <span class="text-xs sm:text-sm font-medium">Instant Advance on Correct</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-950/50 rounded-b-3xl">
+        <button id="btn-reset-defaults" type="button" class="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
+          Reset Defaults
+        </button>
+        <button id="btn-save-settings" type="button" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-sky-500 hover:bg-sky-600 text-white shadow-sm transition">
+          Apply & Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application Module integrating picocalc/nanoalgebra -->
+  <script type="module">
+    // =========================================================================
+    // 1. NANOALGEBRA INTEGRATION & AST MATHEMATICAL VERIFIER
+    // =========================================================================
+    let nano = null;
+    let nanoReady = false;
+
+    const engineBadge = document.getElementById("engine-badge");
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const DEFAULT_COMMIT = '0ca1a5c';
+      const commit = params.get('commit') || DEFAULT_COMMIT;
+      if (commit?.length !== 7) throw new Error('Invalid `commit` param');
+      const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
+      if (mod && typeof mod.parse === "function" && typeof mod.simplify === "function") {
+        nano = mod;
+        engineBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>nanoalgebra@${commit}`;
+        nanoReady = true;
+      }
+    } catch (err) {
+      // Fallback parser/evaluator will activate automatically if CDN is unreachable
+      nanoReady = false;
+    }
+
+    if (!nanoReady) {
+      engineBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>exact-math fallback`;
+    }
+
+    // Configure nanoalgebra custom functions & constants (pi, e positive; i complex)
+    const CUSTOM_FUNCTIONS = nanoReady
+      ? new Set([
+          ...nano.functions,
+          "sin", "cos", "tan", "sec", "csc", "cosec", "cot", "ln", "log", "exp"
+        ])
+      : new Set(["abs", "sqrt", "sin", "cos", "tan", "sec", "csc", "cosec", "cot", "ln", "log", "exp"]);
+
+    const CUSTOM_CONSTANTS = nanoReady
+      ? (() => {
+          const map = new Map(nano.constants);
+          map.set("i", "complex");
+          return map;
+        })()
+      : new Map([["pi", "positive"], ["e", "positive"], ["i", "complex"]]);
+
+    /**
+     * Parses and simplifies an input expression string using nanoalgebra.
+     * Normalizes unicode math symbols (−, ×, ÷, π, √) before lexing.
+     */
+    function normalizeMathInput(raw) {
+      return String(raw || "")
+        .trim()
+        .replace(/−/g, "-")
+        .replace(/×/g, "*")
+        .replace(/÷/g, "/")
+        .replace(/π/g, "pi")
+        .replace(/√\(/g, "sqrt(")
+        .replace(/√([0-9a-zA-Z]+)/g, "sqrt($1)");
+    }
+
+    function nanoParseAndSimplify(rawExpr) {
+      const expr = normalizeMathInput(rawExpr);
+      if (!expr) throw new Error("Empty expression");
+
+      if (nanoReady) {
+        const parseOpts = { functions: CUSTOM_FUNCTIONS };
+        const evalOpts = {
+          functions: CUSTOM_FUNCTIONS,
+          constants: CUSTOM_CONSTANTS,
+          complex: true
+        };
+        const rawTree = nano.parse(expr, parseOpts);
+        const simplifiedTree = nano.simplify(expr, evalOpts);
+        return {
+          rawTree,
+          simplifiedTree,
+          printed: nano.printNode(simplifiedTree)
+        };
+      }
+
+      return {
+        rawTree: null,
+        simplifiedTree: null,
+        printed: expr
+      };
+    }
+
+    /**
+     * Converts a nanoalgebra TreeNode into crisp LaTeX for live KaTeX preview.
+     */
+    function treeToLatex(node, parentPrec = 0) {
+      if (!node) return "";
+      switch (node.type) {
+        case "UNDEFINED":
+          return "\\text{undefined}";
+        case "INTEGER":
+          return node.value.toString();
+        case "DECIMAL":
+          return nano.printNode(node);
+        case "FRACTION": {
+          const num = node.numerator;
+          const den = node.denominator;
+          if (num < 0n) {
+            return `-\\frac{${(-num).toString()}}{${den.toString()}}`;
+          }
+          return `\\frac{${num.toString()}}{${den.toString()}}`;
+        }
+        case "SYMBOL":
+          if (node.name === "pi") return "\\pi";
+          return node.name;
+        case "FUNCTION": {
+          const fn = node.name;
+          const argsLatex = node.args.map(a => treeToLatex(a, 0));
+          if (fn === "sqrt") return `\\sqrt{${argsLatex[0]}}`;
+          if (fn === "abs") return `\\left|${argsLatex[0]}\\right|`;
+          if (["sin", "cos", "tan", "sec", "csc", "cot", "ln", "log", "exp"].includes(fn)) {
+            return `\\${fn === "csc" ? "operatorname{cosec}" : fn}\\left(${argsLatex.join(", ")}\\right)`;
+          }
+          return `\\operatorname{${fn}}\\left(${argsLatex.join(", ")}\\right)`;
+        }
+        case "ADD": {
+          const s = `${treeToLatex(node.left, 1)} + ${treeToLatex(node.right, 1)}`;
+          return parentPrec > 1 ? `\\left(${s}\\right)` : s;
+        }
+        case "SUBTRACT": {
+          const s = `${treeToLatex(node.left, 1)} - ${treeToLatex(node.right, 2)}`;
+          return parentPrec > 1 ? `\\left(${s}\\right)` : s;
+        }
+        case "MULTIPLY": {
+          if (node.left.type === "INTEGER" && node.left.value === -1n) {
+            return `-${treeToLatex(node.right, 3)}`;
+          }
+          const l = treeToLatex(node.left, 2);
+          const r = treeToLatex(node.right, 2);
+          const needsDot =
+            (node.left.type === "INTEGER" || node.left.type === "FRACTION" || node.left.type === "DECIMAL") &&
+            (node.right.type === "INTEGER" || node.right.type === "FRACTION" || node.right.type === "DECIMAL");
+          const s = needsDot ? `${l} \\cdot ${r}` : `${l}${r}`;
+          return parentPrec > 2 ? `\\left(${s}\\right)` : s;
+        }
+        case "DIVIDE": {
+          return `\\frac{${treeToLatex(node.left, 0)}}{${treeToLatex(node.right, 0)}}`;
+        }
+        case "MOD": {
+          return `${treeToLatex(node.left, 2)} \\bmod ${treeToLatex(node.right, 2)}`;
+        }
+        case "POWER": {
+          const base = treeToLatex(node.left, 4);
+          const exp = treeToLatex(node.right, 0);
+          const needsParens = ["ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "FRACTION"].includes(node.left.type);
+          const bStr = needsParens ? `\\left(${base}\\right)` : base;
+          return `${bStr}^{${exp}}`;
+        }
+        default:
+          return nano.printNode(node) ?? '';
+      }
+    }
+
+    // Complex arithmetic helpers for exact AST numerical verification
+    const C = {
+      add: (a, b) => ({ re: a.re + b.re, im: a.im + b.im }),
+      sub: (a, b) => ({ re: a.re - b.re, im: a.im - b.im }),
+      mul: (a, b) => ({ re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re }),
+      div: (a, b) => {
+        const d = b.re * b.re + b.im * b.im;
+        if (d === 0) throw new Error("Division by zero");
+        return { re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d };
+      },
+      sqrt: (z) => {
+        const r = Math.hypot(z.re, z.im);
+        const re = Math.sqrt((r + z.re) / 2);
+        const im = (z.im < 0 ? -1 : 1) * Math.sqrt(Math.max(0, (r - z.re) / 2));
+        return { re, im };
+      },
+      exp: (z) => {
+        const er = Math.exp(z.re);
+        return { re: er * Math.cos(z.im), im: er * Math.sin(z.im) };
+      },
+      ln: (z) => {
+        const r = Math.hypot(z.re, z.im);
+        if (r === 0) throw new Error("ln(0) undefined");
+        return { re: Math.log(r), im: Math.atan2(z.im, z.re) };
+      },
+      pow: (a, b) => {
+        if (b.im === 0 && Number.isInteger(b.re)) {
+          let n = b.re;
+          if (n === 0) return { re: 1, im: 0 };
+          let base = a;
+          if (n < 0) {
+            base = C.div({ re: 1, im: 0 }, a);
+            n = -n;
+          }
+          let res = { re: 1, im: 0 };
+          for (let k = 0; k < n; k++) res = C.mul(res, base);
+          return res;
+        }
+        if (a.re === 0 && a.im === 0) return { re: 0, im: 0 };
+        return C.exp(C.mul(b, C.ln(a)));
+      },
+      absDiff: (a, b) => Math.hypot(a.re - b.re, a.im - b.im)
+    };
+
+    /**
+     * Evaluates a nanoalgebra TreeNode to a complex number {re, im} given variable bindings.
+     */
+    function evalTreeNode(node, env = {}) {
+      if (!node) throw new Error("Empty AST");
+      switch (node.type) {
+        case "UNDEFINED":
+          throw new Error("Undefined expression");
+        case "INTEGER":
+          return { re: Number(node.value), im: 0 };
+        case "DECIMAL":
+          return { re: Number(nano.printNode(node)), im: 0 };
+        case "FRACTION":
+          return { re: Number(node.numerator) / Number(node.denominator), im: 0 };
+        case "SYMBOL": {
+          const name = node.name;
+          if (name === "pi") return { re: Math.PI, im: 0 };
+          if (name === "e") return { re: Math.E, im: 0 };
+          if (name === "i") return { re: 0, im: 1 };
+          if (Object.hasOwn(env, name)) {
+            const val = env[name];
+            return typeof val === "number" ? { re: val, im: 0 } : val;
+          }
+          throw new Error(`Unknown variable '${name}'`);
+        }
+        case "ADD":
+          return C.add(evalTreeNode(node.left, env), evalTreeNode(node.right, env));
+        case "SUBTRACT":
+          return C.sub(evalTreeNode(node.left, env), evalTreeNode(node.right, env));
+        case "MULTIPLY":
+          return C.mul(evalTreeNode(node.left, env), evalTreeNode(node.right, env));
+        case "DIVIDE":
+          return C.div(evalTreeNode(node.left, env), evalTreeNode(node.right, env));
+        case "MOD": {
+          const l = evalTreeNode(node.left, env);
+          const r = evalTreeNode(node.right, env);
+          if (l.im !== 0 || r.im !== 0) throw new Error("Modulo requires real values");
+          return { re: ((l.re % r.re) + r.re) % r.re, im: 0 };
+        }
+        case "POWER":
+          return C.pow(evalTreeNode(node.left, env), evalTreeNode(node.right, env));
+        case "FUNCTION": {
+          const fn = node.name;
+          const arg0 = evalTreeNode(node.args[0], env);
+          if (fn === "sqrt") return C.sqrt(arg0);
+          if (fn === "abs") return { re: Math.hypot(arg0.re, arg0.im), im: 0 };
+          if (fn === "exp") return C.exp(arg0);
+          if (fn === "ln") return C.ln(arg0);
+          if (fn === "log") {
+            if (node.args.length === 2) {
+              const base = evalTreeNode(node.args[1], env);
+              return C.div(C.ln(arg0), C.ln(base));
+            }
+            return C.div(C.ln(arg0), { re: Math.LN10, im: 0 });
+          }
+          if (arg0.im !== 0) throw new Error(`Real argument expected for ${fn}`);
+          const x = arg0.re;
+          if (fn === "sin") return { re: Math.sin(x), im: 0 };
+          if (fn === "cos") return { re: Math.cos(x), im: 0 };
+          if (fn === "tan") return { re: Math.tan(x), im: 0 };
+          if (fn === "sec") return { re: 1 / Math.cos(x), im: 0 };
+          if (fn === "csc" || fn === "cosec") return { re: 1 / Math.sin(x), im: 0 };
+          if (fn === "cot") return { re: 1 / Math.tan(x), im: 0 };
+          throw new Error(`Unsupported function '${fn}'`);
+        }
+        default:
+          throw new Error("Unsupported AST node");
+      }
+    }
+
+    /**
+     * Checks if a simplified AST contains a sqrt inside any denominator (used to enforce rationalised surds).
+     */
+    function hasSqrtInDenominator(node, inDenom = false) {
+      if (!node) return false;
+      if (node.type === "FUNCTION" && node.name === "sqrt" && inDenom) return true;
+      if (node.type === "DIVIDE") {
+        return hasSqrtInDenominator(node.left, inDenom) || hasSqrtInDenominator(node.right, true);
+      }
+      if (node.left && hasSqrtInDenominator(node.left, inDenom)) return true;
+      if (node.right && hasSqrtInDenominator(node.right, inDenom)) return true;
+      if (node.args) return node.args.some(a => hasSqrtInDenominator(a, inDenom));
+      return false;
+    }
+
+    /**
+     * Verifies if userExpr is mathematically equivalent to targetExpr via nanoalgebra.
+     * Supports exact canonical difference check + multi-point symbolic probing.
+     */
+    function verifyExpression(userExpr, targetExpr, options = {}) {
+      const { vars = [], requireRationalised = false } = options;
+      const userParsed = nanoParseAndSimplify(userExpr);
+      const targetParsed = nanoParseAndSimplify(targetExpr);
+
+      if (!nanoReady) {
+        const cleanU = normalizeMathInput(userExpr).replace(/\s+/g, "");
+        const cleanT = normalizeMathInput(targetExpr).replace(/\s+/g, "");
+        return { ok: cleanU === cleanT, diagnostic: null, printed: userParsed.printed };
+      }
+
+      if (requireRationalised && hasSqrtInDenominator(userParsed.simplifiedTree)) {
+        return {
+          ok: false,
+          diagnostic: "Rationalise the denominator (no √ in denominator).",
+          printed: userParsed.printed
+        };
+      }
+
+      // 1. Direct canonical identity via nanoalgebra simplify((user) - (target)) === "0"
+      try {
+        const diffTree = nano.simplify(`(${normalizeMathInput(userExpr)}) - (${normalizeMathInput(targetExpr)})`, {
+          functions: CUSTOM_FUNCTIONS,
+          constants: CUSTOM_CONSTANTS,
+          complex: true
+        });
+        if (nano.printNode(diffTree) === "0") {
+          return { ok: true, diagnostic: null, printed: userParsed.printed };
+        }
+      } catch (_) {
+        // Proceed to multi-point AST verification
+      }
+
+      // 2. Exact AST numerical/complex verification across test points
+      const samplePoints = vars.length === 0
+        ? [{}]
+        : [
+            { x: 0.73, k: 1.41, t: 0.52 },
+            { x: -1.37, k: -0.83, t: 1.91 },
+            { x: 2.61, k: 3.17, t: -1.14 }
+          ];
+
+      for (const env of samplePoints) {
+        const uVal = evalTreeNode(userParsed.simplifiedTree, env);
+        const tVal = evalTreeNode(targetParsed.simplifiedTree, env);
+        if (Number.isNaN(uVal.re) || Number.isNaN(uVal.im) || C.absDiff(uVal, tVal) > 1e-7) {
+          return { ok: false, diagnostic: null, printed: userParsed.printed };
+        }
+      }
+
+      return { ok: true, diagnostic: null, printed: userParsed.printed };
+    }
+
+    // =========================================================================
+    // 2. PROCEDURAL YEAR 13 A-LEVEL PURE & FURTHER PURE GENERATORS
+    // =========================================================================
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const nonZeroInt = (min, max) => {
+      let v = 0;
+      while (v === 0) v = randInt(min, max);
+      return v;
+    };
+    const gcd = (a, b) => {
+      a = Math.abs(a); b = Math.abs(b);
+      while (b) { [a, b] = [b, a % b]; }
+      return a || 1;
+    };
+    const fmtFrac = (n, d) => {
+      if (d < 0) { n = -n; d = -d; }
+      const g = gcd(n, d);
+      n /= g; d /= g;
+      return d === 1 ? `${n}` : `${n}/${d}`;
+    };
+    const fmtSignedTerm = (coeff, variable = "", isFirst = false) => {
+      if (coeff === 0) return "";
+      const absC = Math.abs(coeff);
+      const sign = coeff < 0 ? (isFirst ? "-" : " - ") : (isFirst ? "" : " + ");
+      const numStr = (absC === 1 && variable) ? "" : `${absC}`;
+      return `${sign}${numStr}${variable}`;
+    };
+
+    const TOPICS = [
+      { id: "numerical", name: "Rapid Numerical", tier: "Quant / Speed", desc: "Products, squares, exact fractions & modular arithmetic" },
+      { id: "quadratics", name: "Quadratics & Discriminants", tier: "A-Level Pure", desc: "Completing the square & equal-roots parameter k" },
+      { id: "partial_fracs", name: "Partial Fractions", tier: "A-Level Pure", desc: "Rapid cover-up method for linear denominators" },
+      { id: "surds_logs", name: "Surds, Indices & Logs", tier: "A-Level Pure", desc: "Fractional powers, rationalising & exact log equations" },
+      { id: "trig_calc", name: "Exact Trig & Calculus", tier: "A-Level Pure", desc: "Radian special values & chain-rule derivatives/integrals" },
+      { id: "complex", name: "Complex Numbers", tier: "Further Pure", desc: "a+bi arithmetic, division & principal arg(z) ∈ (-π, π]" },
+      { id: "matrices", name: "2×2 Matrices", tier: "Further Pure", desc: "Determinants, singular conditions & matrix inverses" },
+      { id: "roots_poly", name: "Roots of Polynomials", tier: "Further Pure", desc: "Vieta's formulas: Σα, Σαβ & Σα² for cubics" }
+    ];
+
+    function generateProblem(topicId, difficulty = "exam", chainVal = null) {
+      const hard = difficulty === "olympiad";
+      const easy = difficulty === "standard";
+
+      switch (topicId) {
+        case "numerical": {
+          const variant = chainVal !== null ? 0 : randInt(0, 3);
+          if (variant === 0) {
+            const a = chainVal !== null ? chainVal : randInt(easy ? 11 : 13, hard ? 29 : 24);
+            const b = randInt(easy ? 6 : 12, hard ? 27 : 19);
+            const ans = a * b;
+            return {
+              topicId, tier: "Quant / Speed", topicName: "Rapid Numerical",
+              instruction: "Compute mentally:",
+              latex: `${a} \\times ${b}`,
+              formatHint: "Enter exact integer",
+              inputType: "single",
+              answer: `${ans}`,
+              numericCarry: ans,
+              solutionLatex: `${a} \\times ${b} = ${a}(${b - (b % 10)} + ${b % 10}) = ${ans}`
+            };
+          }
+          if (variant === 1) {
+            const base = randInt(16, hard ? 45 : 32);
+            const diff = pick([2, 3, 4, 5, 6]);
+            const a = base + diff;
+            const b = base - diff;
+            const ans = a * a - b * b;
+            return {
+              topicId, tier: "Quant / Speed", topicName: "Rapid Numerical",
+              instruction: "Evaluate using difference of two squares:",
+              latex: `${a}^2 - ${b}^2`,
+              formatHint: "Enter exact integer",
+              inputType: "single",
+              answer: `${ans}`,
+              numericCarry: ans,
+              solutionLatex: `(${a} - ${b})(${a} + ${b}) = ${2 * diff} \\times ${2 * base} = ${ans}`
+            };
+          }
+          if (variant === 2) {
+            const d1 = pick([3, 4, 5, 6, 8]);
+            const d2 = pick([4, 6, 8, 9, 12].filter(d => d !== d1));
+            const n1 = nonZeroInt(-5, 7);
+            const n2 = nonZeroInt(-5, 7);
+            const isSub = Math.random() < 0.5;
+            const num = isSub ? n1 * d2 - n2 * d1 : n1 * d2 + n2 * d1;
+            const den = d1 * d2;
+            const ans = fmtFrac(num, den);
+            return {
+              topicId, tier: "Quant / Speed", topicName: "Rapid Numerical",
+              instruction: "Evaluate as a single simplified fraction:",
+              latex: `\\frac{${n1}}{${d1}} ${isSub ? "-" : "+"} ${n2 < 0 ? `\\left(\\frac{${n2}}{${d2}}\\right)` : `\\frac{${n2}}{${d2}}`}`,
+              formatHint: "Exact fraction (e.g. 5/12)",
+              inputType: "single",
+              answer: ans,
+              numericCarry: Math.round((num / den) * 12) || 3,
+              solutionLatex: `\\frac{${n1 * d2} ${isSub ? "-" : "+"} ${n2 * d1}}{${den}} = ${ans}`
+            };
+          }
+          const mod = pick([7, 8, 9, 11, 12]);
+          const q = randInt(4, hard ? 16 : 11);
+          const rem = randInt(1, mod - 1);
+          const n = q * mod + rem;
+          return {
+            topicId, tier: "Quant / Speed", topicName: "Rapid Numerical",
+            instruction: `Find the least non-negative residue modulo ${mod}:`,
+            latex: `${n} \\equiv x \\pmod{${mod}}`,
+            formatHint: `Integer 0 ≤ x < ${mod}`,
+            inputType: "single",
+            answer: `${rem}`,
+            numericCarry: rem,
+            solutionLatex: `${n} = ${q} \\times ${mod} + ${rem} \\implies x = ${rem}`
+          };
+        }
+
+        case "quadratics": {
+          const variant = chainVal !== null ? 1 : randInt(0, 1);
+          if (variant === 0) {
+            const a = easy ? 1 : pick([2, 3, -2]);
+            const pNum = nonZeroInt(-5, 5);
+            const pDen = (!easy && Math.abs(pNum) % 2 === 1) ? 2 : 1;
+            const q = nonZeroInt(-9, 9);
+            const bCoeff = (2 * a * pNum) / pDen;
+            const cNum = a * pNum * pNum + q * pDen * pDen;
+            const cDen = pDen * pDen;
+            const cLatex = cDen === 1 ? fmtSignedTerm(cNum, "", false) : (cNum < 0 ? ` - \\frac{${-cNum}}{${cDen}}` : ` + \\frac{${cNum}}{${cDen}}`);
+            const pAns = fmtFrac(pNum, pDen);
+            const qAns = `${q}`;
+            return {
+              topicId, tier: "A-Level Pure", topicName: "Quadratics",
+              instruction: `Write in completed square form ${a === 1 ? "(x + p)^2 + q" : `${a}(x + p)^2 + q`}:`,
+              latex: `${fmtSignedTerm(a, "x^2", true)}${fmtSignedTerm(bCoeff, "x", false)}${cLatex}`,
+              formatHint: "Enter exact values for p and q",
+              inputType: "pair",
+              pairLabels: ["p =", "q ="],
+              answer: [pAns, qAns],
+              numericCarry: q,
+              solutionLatex: `p = \\frac{b}{2a} = ${pAns}, \\quad q = c - a p^2 = ${qAns}`,
+              checkTrap: ([uP]) => {
+                if (uP === fmtFrac(-pNum, pDen)) return "Sign trap on p: inside (x + p)², p has the same sign as b/(2a).";
+                return null;
+              }
+            };
+          }
+          const r = nonZeroInt(-6, 6);
+          const a = chainVal !== null && chainVal !== 0 ? Math.abs(chainVal) : pick([1, 2, 3, 4]);
+          const b = -2 * a * r;
+          const kAns = a * r * r;
+          return {
+            topicId, tier: "A-Level Pure", topicName: "Quadratics",
+            instruction: "Find k given that the quadratic has equal roots:",
+            latex: `${fmtSignedTerm(a, "x^2", true)}${fmtSignedTerm(b, "x", false)} + k = 0`,
+            formatHint: "Use b² - 4ac = 0",
+            inputType: "single",
+            answer: `${kAns}`,
+            numericCarry: r,
+            solutionLatex: `\\Delta = (${b})^2 - 4(${a})(k) = 0 \\implies ${b * b} = ${4 * a}k \\implies k = ${kAns}`
+          };
+        }
+
+        case "partial_fracs": {
+          const A = nonZeroInt(-5, 6);
+          const B = nonZeroInt(-5, 6);
+          const r1 = chainVal !== null ? (chainVal % 5 || 2) : nonZeroInt(-4, 4);
+          let r2 = nonZeroInt(-4, 4);
+          while (r2 === r1) r2 = nonZeroInt(-4, 4);
+          const p = A + B;
+          const q = -(A * r2 + B * r1);
+          const den1 = r1 > 0 ? `(x - ${r1})` : `(x + ${-r1})`;
+          const den2 = r2 > 0 ? `(x - ${r2})` : `(x + ${-r2})`;
+          const numLatex = p === 0
+            ? `${q}`
+            : `${fmtSignedTerm(p, "x", true)}${fmtSignedTerm(q, "", false)}`;
+          return {
+            topicId, tier: "A-Level Pure", topicName: "Partial Fractions",
+            instruction: "Find A and B using the cover-up method:",
+            latex: `\\frac{${numLatex}}{${den1}${den2}} \\equiv \\frac{A}{${den1}} + \\frac{B}{${den2}}`,
+            formatHint: "Enter exact integers/fractions for A and B",
+            inputType: "pair",
+            pairLabels: ["A =", "B ="],
+            answer: [`${A}`, `${B}`],
+            numericCarry: A + B,
+            solutionLatex: `\\text{Sub } x = ${r1}: A = \\frac{${p * r1 + q}}{${r1 - r2}} = ${A}. \\quad \\text{Sub } x = ${r2}: B = \\frac{${p * r2 + q}}{${r2 - r1}} = ${B}.`,
+            checkTrap: ([uA, uB]) => {
+              if (uA === `${B}` && uB === `${A}`) return "Swapped A and B! Match each numerator to its own denominator root.";
+              return null;
+            }
+          };
+        }
+
+        case "surds_logs": {
+          const variant = chainVal !== null ? 2 : randInt(0, 2);
+          if (variant === 0) {
+            const bases = [
+              { num: 8, den: 27, rootN: 2, rootD: 3 },
+              { num: 27, den: 64, rootN: 3, rootD: 4 },
+              { num: 16, den: 81, rootN: 2, rootD: 3 },
+              { num: 32, den: 243, rootN: 2, rootD: 3 },
+              { num: 4, den: 9, rootN: 2, rootD: 3 }
+            ];
+            const item = pick(bases);
+            const m = item.num === 32 ? 5 : (item.num === 16 ? 4 : (item.num === 4 ? 2 : 3));
+            const p = pick([1, 2, 3]);
+            const neg = Math.random() < 0.7;
+            const expStr = `${neg ? "-" : ""}\\frac{${p}}{${m}}`;
+            const resNum = neg ? item.rootD ** p : item.rootN ** p;
+            const resDen = neg ? item.rootN ** p : item.rootD ** p;
+            const ans = fmtFrac(resNum, resDen);
+            return {
+              topicId, tier: "A-Level Pure", topicName: "Indices & Surds",
+              instruction: "Evaluate without a calculator:",
+              latex: `\\left(\\frac{${item.num}}{${item.den}}\\right)^{${expStr}}`,
+              formatHint: "Enter exact fraction (e.g. 9/4)",
+              inputType: "single",
+              answer: ans,
+              numericCarry: resNum,
+              solutionLatex: `\\left(\\frac{${item.rootN}}{${item.rootD}}\\right)^{${neg ? -p : p}} = ${ans}`
+            };
+          }
+          if (variant === 1) {
+            const surd = pick([2, 3, 5, 6, 7]);
+            const a = randInt(2, 5);
+            const denomDiff = a * a - surd;
+            const mult = nonZeroInt(-3, 3);
+            const k = mult * denomDiff;
+            const isMinus = Math.random() < 0.5;
+            const signInAns = isMinus ? "+" : "-";
+            const ans = `${mult * a} ${signInAns} ${mult < 0 ? `(${mult})` : mult}*sqrt(${surd})`;
+            const cleanDisp = `${mult * a} ${isMinus ? (mult >= 0 ? "+" : "-") : (mult >= 0 ? "-" : "+")} ${Math.abs(mult) === 1 ? "" : Math.abs(mult)}\\sqrt{${surd}}`;
+            return {
+              topicId, tier: "A-Level Pure", topicName: "Indices & Surds",
+              instruction: "Rationalise the denominator and simplify:",
+              latex: `\\frac{${k}}{${a} ${isMinus ? "-" : "+"} \\sqrt{${surd}}}`,
+              formatHint: "e.g. 6 + 2sqrt(3)",
+              inputType: "single",
+              requireRationalised: true,
+              answer: ans,
+              numericCarry: mult * a,
+              solutionLatex: `\\frac{${k}(${a} ${signInAns} \\sqrt{${surd}})}{${a}^2 - ${surd}} = ${mult}(${a} ${signInAns} \\sqrt{${surd}}) = ${cleanDisp}`
+            };
+          }
+          const base = pick([2, 3, 4, 5]);
+          const p = randInt(2, 3);
+          const targetPow = base ** p;
+          const xAns = chainVal !== null ? (Math.abs(chainVal) % 6) + 1 : randInt(2, 7);
+          const m = pick([2, 3, 4]);
+          const c = targetPow - m * xAns;
+          return {
+            topicId, tier: "A-Level Pure", topicName: "Logarithms",
+            instruction: "Solve for exact x:",
+            latex: `\\log_{${base}}(${m}x ${c >= 0 ? `+ ${c}` : `- ${-c}`}) = ${p}`,
+            formatHint: "Enter exact value of x",
+            inputType: "single",
+            answer: `${xAns}`,
+            numericCarry: xAns,
+            solutionLatex: `${m}x ${c >= 0 ? `+ ${c}` : `- ${-c}`} = ${base}^{${p}} = ${targetPow} \\implies ${m}x = ${targetPow - c} \\implies x = ${xAns}`
+          };
+        }
+
+        case "trig_calc": {
+          const variant = chainVal !== null ? 1 : randInt(0, 1);
+          if (variant === 0) {
+            const angles = [
+              { tex: "\\frac{\\pi}{6}", sin: "1/2", cos: "sqrt(3)/2", tan: "sqrt(3)/3", sec: "2sqrt(3)/3", csc: "2" },
+              { tex: "\\frac{\\pi}{4}", sin: "sqrt(2)/2", cos: "sqrt(2)/2", tan: "1", sec: "sqrt(2)", csc: "sqrt(2)" },
+              { tex: "\\frac{\\pi}{3}", sin: "sqrt(3)/2", cos: "1/2", tan: "sqrt(3)", sec: "2", csc: "2sqrt(3)/3" },
+              { tex: "\\frac{2\\pi}{3}", sin: "sqrt(3)/2", cos: "-1/2", tan: "-sqrt(3)", sec: "-2", csc: "2sqrt(3)/3" },
+              { tex: "\\frac{3\\pi}{4}", sin: "sqrt(2)/2", cos: "-sqrt(2)/2", tan: "-1", sec: "-sqrt(2)", csc: "sqrt(2)" },
+              { tex: "\\frac{5\\pi}{6}", sin: "1/2", cos: "-sqrt(3)/2", tan: "-sqrt(3)/3", sec: "-2sqrt(3)/3", csc: "2" },
+              { tex: "\\frac{7\\pi}{6}", sin: "-1/2", cos: "-sqrt(3)/2", tan: "sqrt(3)/3", sec: "-2sqrt(3)/3", csc: "-2" },
+              { tex: "\\frac{4\\pi}{3}", sin: "-sqrt(3)/2", cos: "-1/2", tan: "sqrt(3)", sec: "-2", csc: "-2sqrt(3)/3" },
+              { tex: "\\frac{5\\pi}{3}", sin: "-sqrt(3)/2", cos: "1/2", tan: "-sqrt(3)", sec: "2", csc: "-2sqrt(3)/3" }
+            ];
+            const fns = easy ? ["sin", "cos", "tan"] : ["sin", "cos", "tan", "sec", "csc"];
+            const ang = pick(angles);
+            const fn = pick(fns);
+            const fnLatex = fn === "csc" ? "\\operatorname{cosec}" : `\\${fn}`;
+            return {
+              topicId, tier: "A-Level Pure", topicName: "Exact Trig",
+              instruction: "Evaluate the exact trigonometric value (radians):",
+              latex: `${fnLatex}\\left(${ang.tex}\\right)`,
+              formatHint: "Exact value (e.g. -sqrt(3)/2, -2)",
+              inputType: "single",
+              answer: ang[fn],
+              numericCarry: 3,
+              solutionLatex: `${fnLatex}\\left(${ang.tex}\\right) = ${ang[fn].replace(/sqrt\(([^)]+)\)/g, "\\sqrt{$1}")}`
+            };
+          }
+          const k = chainVal !== null && chainVal !== 0 ? Math.abs(chainVal) : pick([2, 3, 4, 5]);
+          const n = pick([2, 3, 4]);
+          const a = nonZeroInt(-3, 4);
+          if (Math.random() < 0.5) {
+            const ans = a * n * k;
+            return {
+              topicId, tier: "A-Level Pure", topicName: "Chain Calculus",
+              instruction: "Given f(x), evaluate f'(0):",
+              latex: `f(x) = ${a === 1 ? "" : (a === -1 ? "-" : a)}(${k}x + 1)^{${n}}`,
+              formatHint: "Enter exact integer",
+              inputType: "single",
+              answer: `${ans}`,
+              numericCarry: ans,
+              solutionLatex: `f'(x) = ${a} \\cdot ${n} \\cdot ${k}(${k}x + 1)^{${n - 1}} \\implies f'(0) = ${ans}`
+            };
+          } else {
+            const mult = nonZeroInt(-4, 5);
+            const M = mult * k;
+            return {
+              topicId, tier: "A-Level Pure", topicName: "Chain Calculus",
+              instruction: "Find the coefficient C:",
+              latex: `\\int ${M}e^{${k}x}\\,dx = C e^{${k}x} + c`,
+              formatHint: "Divide by inner derivative k",
+              inputType: "single",
+              answer: `${mult}`,
+              numericCarry: mult,
+              solutionLatex: `\\int ${M}e^{${k}x}\\,dx = \\frac{${M}}{${k}}e^{${k}x} + c = ${mult}e^{${k}x} + c`,
+              checkTrap: ([u]) => {
+                if (u === `${M * k}`) return "Reverse chain-rule trap: divide by k, do not multiply by k!";
+                return null;
+              }
+            };
+          }
+        }
+
+        case "complex": {
+          const variant = chainVal !== null ? 0 : randInt(0, 2);
+          if (variant === 0) {
+            const a = chainVal !== null ? (chainVal % 6 || 3) : nonZeroInt(-4, 5);
+            const b = nonZeroInt(-4, 4);
+            const c = nonZeroInt(-4, 5);
+            const d = nonZeroInt(-4, 4);
+            const re = a * c - b * d;
+            const im = a * d + b * c;
+            const ans = `${re} + (${im})*i`;
+            const z1 = `${a} ${b >= 0 ? `+ ${b}i` : `- ${-b}i`}`;
+            const z2 = `${c} ${d >= 0 ? `+ ${d}i` : `- ${-d}i`}`;
+            return {
+              topicId, tier: "Further Pure", topicName: "Complex Numbers",
+              instruction: "Expand and simplify into a + bi form:",
+              latex: `(${z1})(${z2})`,
+              formatHint: "e.g. 11 - 2i",
+              inputType: "single",
+              answer: ans,
+              numericCarry: re,
+              solutionLatex: `(${a}\\cdot${c} - (${b})(${d})) + (${a}(${d}) + (${b})(${c}))i = ${re} ${im >= 0 ? `+ ${im}i` : `- ${-im}i`}`,
+              checkTrap: ([u]) => {
+                try {
+                  const wrongRe = a * c + b * d;
+                  if (verifyExpression(u, `${wrongRe} + (${im})*i`).ok) {
+                    return "Sign trap: i² = -1, so (bi)(di) = -bd, not +bd!";
+                  }
+                } catch (_) {}
+                return null;
+              }
+            };
+          }
+          if (variant === 1) {
+            const p = nonZeroInt(-4, 4);
+            const q = nonZeroInt(-4, 4);
+            const c = pick([1, 2, -1, -2]);
+            const d = pick([1, -1, 2, -2]);
+            const numRe = p * c - q * d;
+            const numIm = p * d + q * c;
+            const numTex = `${numRe} ${numIm >= 0 ? `+ ${numIm}i` : `- ${-numIm}i`}`;
+            const denTex = `${c} ${d >= 0 ? `+ ${d}i` : `- ${-d}i`}`;
+            return {
+              topicId, tier: "Further Pure", topicName: "Complex Numbers",
+              instruction: "Express in the form a + bi:",
+              latex: `\\frac{${numTex}}{${denTex}}`,
+              formatHint: "Multiply top & bottom by conjugate",
+              inputType: "single",
+              answer: `${p} + (${q})*i`,
+              numericCarry: p,
+              solutionLatex: `\\frac{(${numTex})(${c} ${d >= 0 ? `- ${d}i` : `+ ${-d}i`})}{${c * c + d * d}} = ${p} ${q >= 0 ? `+ ${q}i` : `- ${-q}i`}`
+            };
+          }
+          const cases = [
+            { tex: "1 + i\\sqrt{3}", r: "2", theta: "pi/3", trapTheta: "pi/6" },
+            { tex: "-1 + i\\sqrt{3}", r: "2", theta: "2pi/3", trapTheta: "-pi/3" },
+            { tex: "-1 - i\\sqrt{3}", r: "2", theta: "-2pi/3", trapTheta: "4pi/3" },
+            { tex: "1 - i\\sqrt{3}", r: "2", theta: "-pi/3", trapTheta: "5pi/3" },
+            { tex: "-2 + 2i", r: "2sqrt(2)", theta: "3pi/4", trapTheta: "-pi/4" },
+            { tex: "-2 - 2i", r: "2sqrt(2)", theta: "-3pi/4", trapTheta: "5pi/4" },
+            { tex: "\\sqrt{3} - i", r: "2", theta: "-pi/6", trapTheta: "11pi/6" },
+            { tex: "-\\sqrt{3} + i", r: "2", theta: "5pi/6", trapTheta: "-pi/6" }
+          ];
+          const item = pick(cases);
+          return {
+            topicId, tier: "Further Pure", topicName: "Complex Numbers",
+            instruction: "Find modulus r and principal argument θ ∈ (-π, π]:",
+            latex: `z = ${item.tex}`,
+            formatHint: "e.g. r = 2, θ = -2pi/3",
+            inputType: "pair",
+            pairLabels: ["r =", "θ ="],
+            answer: [item.r, item.theta],
+            numericCarry: 2,
+            solutionLatex: `|z| = ${item.r.replace(/sqrt\(([^)]+)\)/g, "\\sqrt{$1}")}, \\quad \\arg(z) = ${item.theta.replace("pi", "\\pi")} \\in (-\\pi, \\pi]`,
+            checkTrap: ([, uTheta]) => {
+              try {
+                if (verifyExpression(uTheta, item.trapTheta).ok) {
+                  return "Principal argument trap: check Argand quadrant and ensure θ ∈ (-π, π]!";
+                }
+              } catch (_) {}
+              return null;
+            }
+          };
+        }
+
+        case "matrices": {
+          const variant = chainVal !== null ? 0 : randInt(0, 2);
+          if (variant === 0) {
+            const a = chainVal !== null ? (chainVal % 6 || 3) : nonZeroInt(-5, 6);
+            const b = nonZeroInt(-5, 5);
+            const c = nonZeroInt(-5, 5);
+            const d = nonZeroInt(-5, 6);
+            const det = a * d - b * c;
+            return {
+              topicId, tier: "Further Pure", topicName: "2×2 Matrices",
+              instruction: "Evaluate the determinant det(M):",
+              latex: `M = \\begin{pmatrix} ${a} & ${b} \\\\ ${c} & ${d} \\end{pmatrix}`,
+              formatHint: "ad - bc",
+              inputType: "single",
+              answer: `${det}`,
+              numericCarry: det,
+              solutionLatex: `\\det(M) = (${a})(${d}) - (${b})(${c}) = ${a * d} - (${b * c}) = ${det}`
+            };
+          }
+          if (variant === 1) {
+            const c = pick([2, 3, -2, -3]);
+            const d = nonZeroInt(-4, 5);
+            const m = nonZeroInt(-3, 4);
+            const aVal = m * c;
+            const kTarget = m * d;
+            return {
+              topicId, tier: "Further Pure", topicName: "2×2 Matrices",
+              instruction: "Find k given that M is singular (non-invertible):",
+              latex: `M = \\begin{pmatrix} ${aVal} & k \\\\ ${c} & ${d} \\end{pmatrix}`,
+              formatHint: "Set det(M) = 0",
+              inputType: "single",
+              answer: `${kTarget}`,
+              numericCarry: kTarget,
+              solutionLatex: `${aVal}(${d}) - ${c}k = 0 \\implies ${c}k = ${aVal * d} \\implies k = ${kTarget}`
+            };
+          }
+          const templates = [
+            { a: 3, b: 2, c: 1, d: 1 },
+            { a: 2, b: 3, c: 1, d: 2 },
+            { a: 4, b: 3, c: 3, d: 2 },
+            { a: 3, b: 4, c: 1, d: 2 },
+            { a: 4, b: 1, c: 2, d: 1 },
+            { a: 1, b: 3, c: 1, d: 1 }
+          ];
+          const t = pick(templates);
+          const det = t.a * t.d - t.b * t.c;
+          const inv = [
+            fmtFrac(t.d, det),
+            fmtFrac(-t.b, det),
+            fmtFrac(-t.c, det),
+            fmtFrac(t.a, det)
+          ];
+          return {
+            topicId, tier: "Further Pure", topicName: "2×2 Matrices",
+            instruction: "Find the inverse matrix M⁻¹:",
+            latex: `M = \\begin{pmatrix} ${t.a} & ${t.b} \\\\ ${t.c} & ${t.d} \\end{pmatrix}`,
+            formatHint: "Enter exact entries (e.g. -3/2)",
+            inputType: "matrix",
+            answer: inv,
+            numericCarry: det,
+            solutionLatex: `\\det(M) = ${det}, \\quad M^{-1} = \\frac{1}{${det}}\\begin{pmatrix} ${t.d} & ${-t.b} \\\\ ${-t.c} & ${t.a} \\end{pmatrix} = \\begin{pmatrix} ${inv[0]} & ${inv[1]} \\\\ ${inv[2]} & ${inv[3]} \\end{pmatrix}`,
+            checkTrap: (uArr) => {
+              if (uArr[1] === fmtFrac(t.b, det) || uArr[2] === fmtFrac(t.c, det)) {
+                return "Matrix inverse trap: swap main diagonal (a, d) and NEGATE off-diagonal (-b, -c)!";
+              }
+              return null;
+            }
+          };
+        }
+
+        case "roots_poly":
+        default: {
+          const a = easy ? 1 : pick([1, 2]);
+          const sumAlpha = nonZeroInt(-5, 5);
+          const sumPair = nonZeroInt(-6, 6);
+          const prodAlpha = nonZeroInt(-6, 6);
+          const b = -a * sumAlpha;
+          const c = a * sumPair;
+          const d = -a * prodAlpha;
+          const polyLatex = `${fmtSignedTerm(a, "x^3", true)}${fmtSignedTerm(b, "x^2", false)}${fmtSignedTerm(c, "x", false)}${fmtSignedTerm(d, "", false)} = 0`;
+
+          const askType = pick(["sum", "pair", "prod", "sumSq"]);
+          if (askType === "sum") {
+            return {
+              topicId: "roots_poly", tier: "Further Pure", topicName: "Roots of Polynomials",
+              instruction: "Roots are α, β, γ. Find α + β + γ:",
+              latex: polyLatex,
+              formatHint: "Vieta: -b/a",
+              inputType: "single",
+              answer: `${sumAlpha}`,
+              numericCarry: sumAlpha,
+              solutionLatex: `\\sum \\alpha = -\\frac{b}{a} = -\\frac{${b}}{${a}} = ${sumAlpha}`,
+              checkTrap: ([u]) => u === `${-sumAlpha}` ? "Vieta sign trap: Σα = -b/a (flip the sign of b)!" : null
+            };
+          }
+          if (askType === "prod") {
+            return {
+              topicId: "roots_poly", tier: "Further Pure", topicName: "Roots of Polynomials",
+              instruction: "Roots are α, β, γ. Find αβγ:",
+              latex: polyLatex,
+              formatHint: "Vieta: -d/a",
+              inputType: "single",
+              answer: `${prodAlpha}`,
+              numericCarry: prodAlpha,
+              solutionLatex: `\\alpha\\beta\\gamma = -\\frac{d}{a} = -\\frac{${d}}{${a}} = ${prodAlpha}`,
+              checkTrap: ([u]) => u === `${-prodAlpha}` ? "Vieta sign trap: for a cubic, αβγ = -d/a!" : null
+            };
+          }
+          const sumSq = sumAlpha * sumAlpha - 2 * sumPair;
+          return {
+            topicId: "roots_poly", tier: "Further Pure", topicName: "Roots of Polynomials",
+            instruction: "Roots are α, β, γ. Find α² + β² + γ²:",
+            latex: polyLatex,
+            formatHint: "Use (Σα)² - 2(Σαβ)",
+            inputType: "single",
+            answer: `${sumSq}`,
+            numericCarry: sumSq,
+            solutionLatex: `\\sum \\alpha^2 = (\\sum \\alpha)^2 - 2\\sum \\alpha\\beta = (${sumAlpha})^2 - 2(${sumPair}) = ${sumSq}`
+          };
+        }
+      }
+    }
+
+    // =========================================================================
+    // 3. WEB AUDIO SYNTH FEEDBACK (ZERO EXTERNAL URLS)
+    // =========================================================================
+    let audioCtx = null;
+    function playTone(type) {
+      if (!state.settings.sound) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === "hit") {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.09);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === "miss") {
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(190, now);
+          osc.frequency.linearRampToValueAtTime(135, now + 0.16);
+          gain.gain.setValueAtTime(0.09, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          osc.start(now);
+          osc.stop(now + 0.19);
+        } else if (type === "complete") {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(587.33, now);
+          osc.frequency.setValueAtTime(880, now + 0.1);
+          gain.gain.setValueAtTime(0.09, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        }
+      } catch (_) {}
+    }
+
+    // =========================================================================
+    // 4. APPLICATION STATE & PERSISTENCE
+    // =========================================================================
+    const DEFAULT_SETTINGS = {
+      enabledTopics: TOPICS.map(t => t.id),
+      difficulty: "exam",
+      sprintSec: 90,
+      deltaRule: "4,-8",
+      showKeypad: true,
+      autoAdvance: true,
+      sound: true,
+      theme: "dark"
+    };
+
+    const STORAGE_KEY = "y13_fm_speed_studio_v1";
+    function loadSavedData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { settings: { ...DEFAULT_SETTINGS }, bests: {} };
+        const parsed = JSON.parse(raw);
+        return {
+          settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
+          bests: parsed.bests || {}
+        };
+      } catch (_) {
+        return { settings: { ...DEFAULT_SETTINGS }, bests: {} };
+      }
+    }
+
+    const saved = loadSavedData();
+    function persistData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          settings: state.settings,
+          bests: state.bests
+        }));
+      } catch (_) {}
+    }
+
+    const state = {
+      mode: "sprint", // "sprint" | "timedelta" | "pipeline" | "zen"
+      status: "ready", // "ready" | "running" | "summary"
+      settings: saved.settings,
+      bests: saved.bests,
+      timeLeft: 90,
+      elapsed: 0,
+      solved: 0,
+      attempts: 0,
+      streak: 0,
+      bestStreak: 0,
+      topicStats: {},
+      pipelineStage: 1,
+      pipelineCarry: null,
+      pipelinesCompleted: 0,
+      currentQ: null,
+      qStartTime: 0,
+      activeSlotEl: null,
+      timerHandle: null
+    };
+
+    // =========================================================================
+    // 5. DOM REFERENCES & RENDERING HELPERS
+    // =========================================================================
+    const els = {
+      modeBtns: document.querySelectorAll(".mode-btn"),
+      hudTimerLabel: document.getElementById("hud-timer-label"),
+      hudTimer: document.getElementById("hud-timer"),
+      hudDeltaPop: document.getElementById("hud-delta-pop"),
+      hudSolved: document.getElementById("hud-solved"),
+      hudSpm: document.getElementById("hud-spm"),
+      hudStreak: document.getElementById("hud-streak"),
+      hudMult: document.getElementById("hud-mult"),
+      hudAccuracy: document.getElementById("hud-accuracy"),
+      drillCard: document.getElementById("drill-card"),
+      startOverlay: document.getElementById("start-overlay"),
+      summaryOverlay: document.getElementById("summary-overlay"),
+      questionWorkspace: document.getElementById("question-workspace"),
+      readyPresetLabel: document.getElementById("ready-preset-label"),
+      readyModeTitle: document.getElementById("ready-mode-title"),
+      readyModeDesc: document.getElementById("ready-mode-desc"),
+      readyPbBadge: document.getElementById("ready-pb-badge"),
+      qTierBadge: document.getElementById("q-tier-badge"),
+      qTopicBadge: document.getElementById("q-topic-badge"),
+      qStepTimer: document.getElementById("q-step-timer"),
+      pipelineTracker: document.getElementById("pipeline-tracker"),
+      pipeStep1: document.getElementById("pipe-step-1"),
+      pipeStep2: document.getElementById("pipe-step-2"),
+      pipeStep3: document.getElementById("pipe-step-3"),
+      pipeCarryBadge: document.getElementById("pipe-carry-badge"),
+      qInstruction: document.getElementById("q-instruction"),
+      qMathDisplay: document.getElementById("q-math-display"),
+      qFormatHint: document.getElementById("q-format-hint"),
+      inputSingleWrap: document.getElementById("input-mode-single"),
+      inputPairWrap: document.getElementById("input-mode-pair"),
+      inputMatrixWrap: document.getElementById("input-mode-matrix"),
+      ansSingle: document.getElementById("ans-single"),
+      ansPair1: document.getElementById("ans-pair-1"),
+      ansPair2: document.getElementById("ans-pair-2"),
+      pairLabel1: document.getElementById("pair-label-1"),
+      pairLabel2: document.getElementById("pair-label-2"),
+      matSlots: [
+        document.getElementById("ans-mat-00"),
+        document.getElementById("ans-mat-01"),
+        document.getElementById("ans-mat-10"),
+        document.getElementById("ans-mat-11")
+      ],
+      liveAstPreview: document.getElementById("live-ast-preview"),
+      feedbackBanner: document.getElementById("feedback-banner"),
+      solutionBox: document.getElementById("solution-box"),
+      solutionContent: document.getElementById("solution-content"),
+      mobileKeypad: document.getElementById("mobile-keypad"),
+      settingsModal: document.getElementById("settings-modal"),
+      topicTogglesGrid: document.getElementById("topic-toggles-grid"),
+      activeTopicCount: document.getElementById("active-topic-count"),
+      cfgDifficulty: document.getElementById("cfg-difficulty"),
+      cfgSprintSec: document.getElementById("cfg-sprint-sec"),
+      cfgDeltaRule: document.getElementById("cfg-delta-rule"),
+      cfgShowKeypad: document.getElementById("cfg-show-keypad"),
+      cfgAutoAdvance: document.getElementById("cfg-auto-advance")
+    };
+
+    let katexLoadPromise = null;
+    function ensureKatex() {
+      if (window.katex) return Promise.resolve(window.katex);
+      if (katexLoadPromise) return katexLoadPromise;
+
+      katexLoadPromise = (async () => {
+        // Ensure stylesheet is present if primary CDN was blocked
+        if (!document.getElementById("katex-css-fallback")) {
+          const link = document.createElement("link");
+          link.id = "katex-css-fallback";
+          link.rel = "stylesheet";
+          link.href = "https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css";
+          document.head.appendChild(link);
+        }
+        try {
+          const mod = await import("https://esm.sh/katex@0.16.11");
+          window.katex = mod.default || mod;
+        } catch (_) {
+          // Keep graceful text fallback if completely offline
+        }
+        if (window.katex) {
+          document.querySelectorAll("[data-tex]").forEach(node => {
+            const tex = node.dataset.tex;
+            const dm = node.dataset.display === "true";
+            if (tex) {
+              try {
+                window.katex.render(tex, node, { displayMode: dm, throwOnError: false });
+              } catch (_) {}
+            }
+          });
+        }
+        return window.katex;
+      })();
+
+      return katexLoadPromise;
+    }
+
+    function renderKatex(el, tex, displayMode = true) {
+      el.dataset.tex = tex;
+      el.dataset.display = displayMode ? "true" : "false";
+      if (window.katex) {
+        try {
+          window.katex.render(tex, el, { displayMode, throwOnError: false });
+          return;
+        } catch (_) {}
+      }
+      el.textContent = tex;
+      ensureKatex();
+    }
+
+    function applyThemeAndKeypad() {
+      const isDark = state.settings.theme === "dark";
+      document.documentElement.classList.toggle("dark", isDark);
+      els.mobileKeypad.classList.toggle("hidden", !state.settings.showKeypad);
+      document.getElementById("icon-sound-on").classList.toggle("hidden", !state.settings.sound);
+      document.getElementById("icon-sound-off").classList.toggle("hidden", state.settings.sound);
+    }
+
+    function popDelta(text, positive) {
+      els.hudDeltaPop.textContent = text;
+      els.hudDeltaPop.className = `font-mono text-xs font-bold pointer-events-none animate-delta ${
+        positive ? "text-emerald-500" : "text-rose-500"
+      }`;
+      void els.hudDeltaPop.offsetWidth;
+    }
+
+    function updateHUD() {
+      if (state.mode === "sprint" || state.mode === "timedelta") {
+        els.hudTimerLabel.textContent = "Time Left";
+        els.hudTimer.textContent = `${Math.max(0, state.timeLeft).toFixed(1)}s`;
+        els.hudTimer.classList.toggle("text-rose-500", state.timeLeft <= 10 && state.status === "running");
+        els.hudTimer.classList.toggle("text-sky-600", !(state.timeLeft <= 10 && state.status === "running"));
+        els.hudTimer.classList.toggle("dark:text-sky-400", !(state.timeLeft <= 10 && state.status === "running"));
+      } else {
+        els.hudTimerLabel.textContent = state.mode === "pipeline" ? "Chains Done" : "Elapsed";
+        els.hudTimer.textContent = state.mode === "pipeline"
+          ? `${state.pipelinesCompleted}`
+          : `${state.elapsed.toFixed(1)}s`;
+      }
+
+      els.hudSolved.textContent = `${state.solved}`;
+      const mins = Math.max(state.elapsed / 60, 1 / 60);
+      const spm = state.status === "ready" ? 0 : state.solved / mins;
+      els.hudSpm.textContent = `${spm.toFixed(1)}/m`;
+
+      els.hudStreak.textContent = `${state.streak}`;
+      const mult = 1 + Math.floor(state.streak / 5) * 0.5;
+      els.hudMult.textContent = `${mult.toFixed(1)}×`;
+
+      const acc = state.attempts === 0 ? 100 : Math.round((state.solved / state.attempts) * 100);
+      els.hudAccuracy.textContent = `${acc}%`;
+    }
+
+    function setFeedback(text, tone = "neutral") {
+      els.feedbackBanner.textContent = text;
+      els.feedbackBanner.className = "font-semibold shrink-0 " + (
+        tone === "success" ? "text-emerald-600 dark:text-emerald-400" :
+        tone === "error" ? "text-rose-600 dark:text-rose-400" :
+        tone === "warn" ? "text-amber-600 dark:text-amber-400" :
+        "text-slate-500 dark:text-slate-400"
+      );
+    }
+
+    function updateLiveAstPreview(rawVal) {
+      const trimmed = (rawVal || "").trim();
+      if (!trimmed) {
+        els.liveAstPreview.textContent = "Waiting for input...";
+        return;
+      }
+      try {
+        const res = nanoParseAndSimplify(trimmed);
+        if (nanoReady && res.simplifiedTree) {
+          const tex = treeToLatex(res.simplifiedTree);
+          els.liveAstPreview.innerHTML = "";
+          const span = document.createElement("span");
+          renderKatex(span, tex, false);
+          els.liveAstPreview.appendChild(span);
+        } else {
+          els.liveAstPreview.textContent = res.printed;
+        }
+      } catch (err) {
+        els.liveAstPreview.innerHTML = `<span class="text-amber-500">${err.message || "Syntax incomplete..."}</span>`;
+      }
+    }
+
+    // =========================================================================
+    // 6. GAME FLOW, MODE SWITCHING & QUESTION LOADING
+    // =========================================================================
+    function stopTimer() {
+      if (state.timerHandle) {
+        clearInterval(state.timerHandle);
+        state.timerHandle = null;
+      }
+    }
+
+    function getDeltaConfig() {
+      const [gainStr, lossStr] = state.settings.deltaRule.split(",");
+      const gain = Number(gainStr) || 4;
+      const loss = Math.abs(Number(lossStr)) || 8;
+      const start = gain === 5 ? 60 : (gain === 3 ? 30 : 45);
+      return { gain, loss, start };
+    }
+
+    function selectMode(mode) {
+      stopTimer();
+      state.mode = mode;
+
+      els.modeBtns.forEach(btn => {
+        const active = btn.dataset.mode === mode;
+        btn.className = active
+          ? "mode-btn flex flex-col items-start sm:items-center justify-center px-3 py-2.5 rounded-xl text-left sm:text-center transition font-medium bg-slate-900 text-white dark:bg-sky-500 dark:text-slate-950 shadow-sm"
+          : "mode-btn flex flex-col items-start sm:items-center justify-center px-3 py-2.5 rounded-xl text-left sm:text-center transition font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/70";
+      });
+
+      state.solved = 0;
+      state.attempts = 0;
+      state.streak = 0;
+      state.bestStreak = 0;
+      state.elapsed = 0;
+      state.topicStats = {};
+      state.pipelineStage = 1;
+      state.pipelineCarry = null;
+      state.pipelinesCompleted = 0;
+
+      if (mode === "zen") {
+        startRun();
+        return;
+      }
+
+      state.status = "ready";
+      els.startOverlay.classList.remove("hidden");
+      els.summaryOverlay.classList.add("hidden");
+      els.questionWorkspace.classList.add("hidden");
+
+      const activeCount = state.settings.enabledTopics.length;
+      els.readyPresetLabel.textContent = `${state.settings.difficulty.toUpperCase()} • ${activeCount} Module${activeCount === 1 ? "" : "s"} Active`;
+
+      if (mode === "sprint") {
+        state.timeLeft = Number(state.settings.sprintSec) || 90;
+        els.readyModeTitle.textContent = `Timed Sprint (${state.timeLeft}s)`;
+        els.readyModeDesc.textContent = "Continuous rapid-fire arithmetic and Year 13 algebra. Maximize your solves per minute before the clock hits zero.";
+      } else if (mode === "timedelta") {
+        const d = getDeltaConfig();
+        state.timeLeft = d.start;
+        els.readyModeTitle.textContent = `Time-Delta Survival (${d.start}s)`;
+        els.readyModeDesc.textContent = `Start with ${d.start}s. Each exact solve awards +${d.gain}s; every mistake costs -${d.loss}s. Balance raw speed with exam accuracy.`;
+      } else if (mode === "pipeline") {
+        state.timeLeft = 0;
+        els.readyModeTitle.textContent = "Chained Exam Pipeline";
+        els.readyModeDesc.textContent = "Solve 3-stage connected Year 13 problems where the exact output of Stage 1 feeds directly into Stage 2, and Stage 2 into Stage 3.";
+      }
+
+      const pb = state.bests[`${mode}_${state.settings.difficulty}`];
+      els.readyPbBadge.textContent = pb ? `Personal Best (${state.settings.difficulty}): ${pb}` : "Personal Best: No runs recorded yet";
+      updateHUD();
+    }
+
+    function updatePipelineUI() {
+      if (state.mode !== "pipeline") {
+        els.pipelineTracker.classList.add("hidden");
+        els.pipelineTracker.classList.remove("flex");
+        return;
+      }
+      els.pipelineTracker.classList.remove("hidden");
+      els.pipelineTracker.classList.add("flex");
+
+      const stepEls = [els.pipeStep1, els.pipeStep2, els.pipeStep3];
+      stepEls.forEach((el, idx) => {
+        const s = idx + 1;
+        if (s < state.pipelineStage) {
+          el.className = "px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-emerald-500 text-white";
+        } else if (s === state.pipelineStage) {
+          el.className = "px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-sky-500 text-white";
+        } else {
+          el.className = "px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-slate-200 dark:bg-slate-700 text-slate-500";
+        }
+      });
+
+      if (state.pipelineStage > 1 && state.pipelineCarry !== null) {
+        els.pipeCarryBadge.classList.remove("hidden");
+        els.pipeCarryBadge.textContent = `Carry: ${state.pipelineCarry}`;
+      } else {
+        els.pipeCarryBadge.classList.add("hidden");
+      }
+    }
+
+    function nextQuestion() {
+      const pool = state.settings.enabledTopics.length > 0
+        ? state.settings.enabledTopics
+        : TOPICS.map(t => t.id);
+      const topicId = pick(pool);
+      const carry = state.mode === "pipeline" && state.pipelineStage > 1 ? state.pipelineCarry : null;
+
+      const q = generateProblem(topicId, state.settings.difficulty, carry);
+      state.currentQ = q;
+      state.qStartTime = performance.now();
+
+      els.qTierBadge.textContent = q.tier;
+      els.qTopicBadge.textContent = q.topicName;
+      els.qStepTimer.textContent = "0.0s";
+      els.qInstruction.textContent = q.instruction;
+      els.qFormatHint.textContent = q.formatHint;
+      renderKatex(els.qMathDisplay, q.latex, true);
+
+      updatePipelineUI();
+
+      // Hide worked solution box
+      els.solutionBox.classList.add("hidden");
+      els.solutionContent.innerHTML = "";
+
+      // Toggle appropriate slot inputs
+      els.inputSingleWrap.classList.add("hidden");
+      els.inputPairWrap.classList.add("hidden");
+      els.inputMatrixWrap.classList.add("hidden");
+
+      if (q.inputType === "pair") {
+        els.inputPairWrap.classList.remove("hidden");
+        els.pairLabel1.textContent = q.pairLabels?.[0] || "1 =";
+        els.pairLabel2.textContent = q.pairLabels?.[1] || "2 =";
+        els.ansPair1.value = "";
+        els.ansPair2.value = "";
+        state.activeSlotEl = els.ansPair1;
+        setTimeout(() => els.ansPair1.focus(), 10);
+      } else if (q.inputType === "matrix") {
+        els.inputMatrixWrap.classList.remove("hidden");
+        els.matSlots.forEach(s => { s.value = ""; });
+        state.activeSlotEl = els.matSlots[0];
+        setTimeout(() => els.matSlots[0].focus(), 10);
+      } else {
+        els.inputSingleWrap.classList.remove("hidden");
+        els.ansSingle.value = "";
+        state.activeSlotEl = els.ansSingle;
+        setTimeout(() => els.ansSingle.focus(), 10);
+      }
+
+      els.liveAstPreview.textContent = "Waiting for input...";
+      setFeedback("Press Enter to submit", "neutral");
+    }
+
+    function submitAnswer() {
+      if (state.status !== "running" || !state.currentQ) return;
+      const q = state.currentQ;
+
+      let userInputs = [];
+      if (q.inputType === "pair") {
+        userInputs = [els.ansPair1.value.trim(), els.ansPair2.value.trim()];
+      } else if (q.inputType === "matrix") {
+        userInputs = els.matSlots.map(s => s.value.trim());
+      } else {
+        userInputs = [els.ansSingle.value.trim()];
+      }
+
+      if (userInputs.some(v => !v)) {
+        setFeedback("Fill in all answer slots first.", "warn");
+        return;
+      }
+
+      // Validate syntax & mathematical equivalence via nanoalgebra
+      let allValid = true;
+      let diagnosticMsg = null;
+
+      try {
+        if (q.inputType === "single") {
+          const res = verifyExpression(userInputs[0], q.answer, {
+            requireRationalised: Boolean(q.requireRationalised)
+          });
+          allValid = res.ok;
+          diagnosticMsg = res.diagnostic;
+        } else {
+          for (let i = 0; i < q.answer.length; i++) {
+            const res = verifyExpression(userInputs[i], q.answer[i]);
+            if (!res.ok) {
+              allValid = false;
+              diagnosticMsg = res.diagnostic;
+              break;
+            }
+          }
+        }
+      } catch (err) {
+        setFeedback(`Syntax error: ${err.message}`, "warn");
+        return;
+      }
+
+      // Record telemetry
+      const solveMs = Math.max(100, performance.now() - state.qStartTime);
+      if (!state.topicStats[q.topicId]) {
+        state.topicStats[q.topicId] = { solved: 0, attempts: 0, totalMs: 0 };
+      }
+      state.attempts += 1;
+      state.topicStats[q.topicId].attempts += 1;
+
+      if (allValid) {
+        state.solved += 1;
+        state.streak += 1;
+        state.bestStreak = Math.max(state.bestStreak, state.streak);
+        state.topicStats[q.topicId].solved += 1;
+        state.topicStats[q.topicId].totalMs += solveMs;
+
+        playTone("hit");
+
+        if (state.mode === "timedelta") {
+          const { gain } = getDeltaConfig();
+          state.timeLeft += gain;
+          popDelta(`+${gain}s`, true);
+        }
+
+        if (state.mode === "pipeline") {
+          if (state.pipelineStage < 3) {
+            state.pipelineStage += 1;
+            state.pipelineCarry = q.numericCarry;
+            setFeedback(`Stage ${state.pipelineStage - 1} cleared! Carrying ${q.numericCarry} → Stage ${state.pipelineStage}`, "success");
+          } else {
+            state.pipelinesCompleted += 1;
+            state.pipelineStage = 1;
+            state.pipelineCarry = null;
+            setFeedback(`Chain #${state.pipelinesCompleted} Complete!`, "success");
+          }
+        } else {
+          setFeedback(`Exact! (${(solveMs / 1000).toFixed(1)}s)`, "success");
+        }
+
+        updateHUD();
+
+        if (state.settings.autoAdvance) {
+          setTimeout(() => {
+            if (state.status === "running") nextQuestion();
+          }, 140);
+        } else {
+          renderKatex(els.solutionContent, q.solutionLatex, true);
+          els.solutionBox.classList.remove("hidden");
+        }
+      } else {
+        state.streak = 0;
+        playTone("miss");
+
+        els.drillCard.classList.remove("animate-shake");
+        void els.drillCard.offsetWidth;
+        els.drillCard.classList.add("animate-shake");
+
+        if (state.mode === "timedelta") {
+          const { loss } = getDeltaConfig();
+          state.timeLeft = Math.max(0, state.timeLeft - loss);
+          popDelta(`-${loss}s`, false);
+        }
+
+        const trapHit = typeof q.checkTrap === "function" ? q.checkTrap(userInputs) : null;
+        setFeedback(trapHit || diagnosticMsg || "Incorrect — check signs or click Method / Hint.", "error");
+        updateHUD();
+      }
+    }
+
+    function startRun() {
+      stopTimer();
+      state.status = "running";
+      state.solved = 0;
+      state.attempts = 0;
+      state.streak = 0;
+      state.bestStreak = 0;
+      state.elapsed = 0;
+      state.topicStats = {};
+      state.pipelineStage = 1;
+      state.pipelineCarry = null;
+      state.pipelinesCompleted = 0;
+
+      if (state.mode === "sprint") {
+        state.timeLeft = Number(state.settings.sprintSec) || 90;
+      } else if (state.mode === "timedelta") {
+        state.timeLeft = getDeltaConfig().start;
+      }
+
+      els.startOverlay.classList.add("hidden");
+      els.summaryOverlay.classList.add("hidden");
+      els.questionWorkspace.classList.remove("hidden");
+
+      nextQuestion();
+
+      const tickMs = 100;
+      state.timerHandle = setInterval(() => {
+        if (state.status !== "running") return;
+        state.elapsed += 0.1;
+
+        if (state.qStartTime) {
+          const qSec = (performance.now() - state.qStartTime) / 1000;
+          els.qStepTimer.textContent = `${qSec.toFixed(1)}s`;
+        }
+
+        if (state.mode === "sprint" || state.mode === "timedelta") {
+          state.timeLeft -= 0.1;
+          if (state.timeLeft <= 0) {
+            state.timeLeft = 0;
+            updateHUD();
+            finishRun();
+            return;
+          }
+        }
+        updateHUD();
+      }, tickMs);
+
+      updateHUD();
+    }
+
+    function finishRun() {
+      stopTimer();
+      state.status = "summary";
+      playTone("complete");
+
+      els.questionWorkspace.classList.add("hidden");
+      els.startOverlay.classList.add("hidden");
+      els.summaryOverlay.classList.remove("hidden");
+
+      const mins = Math.max(state.elapsed / 60, 1 / 60);
+      const spm = (state.solved / mins).toFixed(1);
+      const acc = state.attempts === 0 ? 100 : Math.round((state.solved / state.attempts) * 100);
+
+      document.getElementById("summary-title").textContent =
+        state.mode === "sprint" ? "Timed Sprint Debrief" :
+        state.mode === "timedelta" ? "Time-Delta Survival Debrief" :
+        state.mode === "pipeline" ? "Chain Pipeline Summary" : "Zen Practice Summary";
+
+      const subtitleParts = [`Time spent: ${state.elapsed.toFixed(1)}s`, `Difficulty: ${state.settings.difficulty}`];
+      if (state.mode === "pipeline") {
+        subtitleParts.unshift(`Chains completed: ${state.pipelinesCompleted}`);
+      }
+      document.getElementById("summary-subtitle").textContent = subtitleParts.join(" • ");
+
+      document.getElementById("sum-solved").textContent = `${state.solved}`;
+      document.getElementById("sum-spm").textContent = `${spm}`;
+      document.getElementById("sum-acc").textContent = `${acc}%`;
+      document.getElementById("sum-streak").textContent = `${state.bestStreak}`;
+
+      // Save Personal Best for timed modes
+      if (state.solved > 0 && (state.mode === "sprint" || state.mode === "timedelta")) {
+        const key = `${state.mode}_${state.settings.difficulty}`;
+        const prev = state.bests[key];
+        const metricLabel = `${state.solved} solved (${spm} SPM)`;
+        if (!prev || state.solved >= parseInt(prev, 10)) {
+          state.bests[key] = metricLabel;
+          persistData();
+        }
+      }
+
+      // Render Topic Telemetry & identify slowest/weakest topic
+      const listEl = document.getElementById("sum-topic-list");
+      listEl.innerHTML = "";
+      let weakestTopicId = null;
+      let worstScore = -1;
+
+      const topicEntries = Object.entries(state.topicStats);
+      if (topicEntries.length === 0) {
+        listEl.innerHTML = `<div class="col-span-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/70 dark:border-slate-800 text-xs text-slate-400 text-center">No questions attempted yet — solve a few drills to unlock per-topic speed & accuracy telemetry.</div>`;
+      }
+
+      topicEntries.forEach(([tid, st]) => {
+        const meta = TOPICS.find(t => t.id === tid) || { name: tid, tier: "" };
+        const tAcc = st.attempts === 0 ? 100 : Math.round((st.solved / st.attempts) * 100);
+        const avgSec = st.solved > 0 ? (st.totalMs / st.solved / 1000).toFixed(1) : "—";
+        const weaknessMetric = (100 - tAcc) * 10 + (st.solved > 0 ? st.totalMs / st.solved / 1000 : 30);
+
+        if (weaknessMetric > worstScore) {
+          worstScore = weaknessMetric;
+          weakestTopicId = tid;
+        }
+
+        const card = document.createElement("div");
+        card.className = "p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-2";
+        card.innerHTML = `
+          <div class="min-w-0">
+            <div class="text-xs font-bold truncate">${meta.name}</div>
+            <div class="text-[11px] text-slate-400">${st.solved}/${st.attempts} hit • avg ${avgSec}s</div>
+          </div>
+          <span class="font-mono text-xs font-bold px-2 py-1 rounded-lg ${
+            tAcc >= 80 ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+          }">${tAcc}%</span>
+        `;
+        listEl.appendChild(card);
+      });
+
+      const weakBtn = document.getElementById("btn-drill-weakest");
+      if (weakestTopicId && topicEntries.length > 1) {
+        weakBtn.classList.remove("hidden");
+        weakBtn.dataset.topicId = weakestTopicId;
+        const meta = TOPICS.find(t => t.id === weakestTopicId);
+        weakBtn.textContent = `Drill Weakest (${meta ? meta.name : weakestTopicId})`;
+      } else {
+        weakBtn.classList.add("hidden");
+      }
+    }
+
+    // =========================================================================
+    // 7. SETTINGS MODAL & EVENT LISTENERS
+    // =========================================================================
+    function renderTopicToggles() {
+      els.topicTogglesGrid.innerHTML = "";
+      TOPICS.forEach(t => {
+        const checked = state.settings.enabledTopics.includes(t.id);
+        const label = document.createElement("label");
+        label.className = "flex items-start gap-2.5 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 cursor-pointer hover:border-sky-500/50 transition";
+        label.innerHTML = `
+          <input type="checkbox" value="${t.id}" ${checked ? "checked" : ""} class="topic-chk mt-0.5 w-4 h-4 rounded accent-sky-500" />
+          <div class="min-w-0">
+            <div class="text-xs font-bold flex items-center gap-1.5">
+              <span class="truncate">${t.name}</span>
+              <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-200/70 dark:bg-slate-800 text-slate-500">${t.tier}</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-snug mt-0.5">${t.desc}</p>
+          </div>
+        `;
+        els.topicTogglesGrid.appendChild(label);
+      });
+
+      const updateCountLabel = () => {
+        const count = els.topicTogglesGrid.querySelectorAll(".topic-chk:checked").length;
+        els.activeTopicCount.textContent = `${count} / ${TOPICS.length} enabled`;
+      };
+      els.topicTogglesGrid.querySelectorAll(".topic-chk").forEach(chk => {
+        chk.addEventListener("change", updateCountLabel);
+      });
+      updateCountLabel();
+    }
+
+    function openSettingsModal() {
+      renderTopicToggles();
+      els.cfgDifficulty.value = state.settings.difficulty;
+      els.cfgSprintSec.value = String(state.settings.sprintSec);
+      els.cfgDeltaRule.value = state.settings.deltaRule;
+      els.cfgShowKeypad.checked = state.settings.showKeypad;
+      els.cfgAutoAdvance.checked = state.settings.autoAdvance;
+      els.settingsModal.classList.remove("hidden");
+    }
+
+    function closeSettingsModal() {
+      els.settingsModal.classList.add("hidden");
+    }
+
+    // Mode toggle buttons
+    els.modeBtns.forEach(btn => {
+      btn.addEventListener("click", () => selectMode(btn.dataset.mode));
+    });
+
+    // Start, Restart & Weakest-topic buttons
+    document.getElementById("btn-start-run").addEventListener("click", startRun);
+    document.getElementById("btn-restart-run").addEventListener("click", () => {
+      if (state.mode === "zen") startRun();
+      else selectMode(state.mode);
+    });
+    document.getElementById("btn-drill-weakest").addEventListener("click", (e) => {
+      const tid = e.currentTarget.dataset.topicId;
+      if (tid) {
+        state.settings.enabledTopics = [tid];
+        persistData();
+      }
+      selectMode("zen");
+    });
+
+    // Submit, Method/Hint, Skip, and Finish controls
+    document.getElementById("btn-submit-answer").addEventListener("click", submitAnswer);
+
+    document.getElementById("btn-show-solution").addEventListener("click", () => {
+      if (!state.currentQ) return;
+      renderKatex(els.solutionContent, state.currentQ.solutionLatex, true);
+      els.solutionBox.classList.toggle("hidden");
+    });
+
+    document.getElementById("btn-skip-question").addEventListener("click", () => {
+      if (state.status !== "running") return;
+      state.streak = 0;
+      if (state.mode === "pipeline") {
+        state.pipelineStage = 1;
+        state.pipelineCarry = null;
+      }
+      updateHUD();
+      nextQuestion();
+    });
+
+    document.getElementById("btn-finish-session").addEventListener("click", () => {
+      if (state.status !== "running") return;
+      finishRun();
+    });
+
+    // Track focused input slot & live nanoalgebra AST preview
+    document.querySelectorAll(".math-slot").forEach(input => {
+      input.addEventListener("focus", () => {
+        state.activeSlotEl = input;
+        updateLiveAstPreview(input.value);
+      });
+      input.addEventListener("input", () => {
+        updateLiveAstPreview(input.value);
+      });
+    });
+
+    // On-screen mobile keypad interactions
+    document.querySelectorAll(".kp-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = state.activeSlotEl || els.ansSingle;
+        if (!target) return;
+        target.focus();
+
+        const ins = btn.dataset.insert;
+        const action = btn.dataset.action;
+        const start = target.selectionStart ?? target.value.length;
+        const end = target.selectionEnd ?? target.value.length;
+
+        if (ins) {
+          target.value = target.value.slice(0, start) + ins + target.value.slice(end);
+          const newPos = start + ins.length;
+          target.setSelectionRange(newPos, newPos);
+        } else if (action === "backspace") {
+          if (start !== end) {
+            target.value = target.value.slice(0, start) + target.value.slice(end);
+            target.setSelectionRange(start, start);
+          } else if (start > 0) {
+            target.value = target.value.slice(0, start - 1) + target.value.slice(end);
+            target.setSelectionRange(start - 1, start - 1);
+          }
+        } else if (action === "clear") {
+          target.value = "";
+        }
+
+        updateLiveAstPreview(target.value);
+      });
+    });
+
+    // Global keyboard navigation (Enter to start / advance slots / submit)
+    document.addEventListener("keydown", (e) => {
+      if (!els.settingsModal.classList.contains("hidden")) {
+        if (e.key === "Escape") closeSettingsModal();
+        return;
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (state.status === "ready") {
+          startRun();
+          return;
+        }
+        if (state.status === "running" && state.currentQ) {
+          const q = state.currentQ;
+          if (q.inputType === "pair" && document.activeElement === els.ansPair1 && !els.ansPair2.value.trim()) {
+            els.ansPair2.focus();
+            return;
+          }
+          if (q.inputType === "matrix") {
+            const idx = els.matSlots.indexOf(document.activeElement);
+            if (idx >= 0 && idx < 3 && !els.matSlots[idx + 1].value.trim()) {
+              els.matSlots[idx + 1].focus();
+              return;
+            }
+          }
+          submitAnswer();
+        }
+      }
+    });
+
+    // Header toggles & settings modal events
+    document.getElementById("btn-sound").addEventListener("click", () => {
+      state.settings.sound = !state.settings.sound;
+      applyThemeAndKeypad();
+      persistData();
+    });
+
+    document.getElementById("btn-theme").addEventListener("click", () => {
+      state.settings.theme = state.settings.theme === "dark" ? "light" : "dark";
+      applyThemeAndKeypad();
+      persistData();
+    });
+
+    document.getElementById("btn-settings").addEventListener("click", openSettingsModal);
+    document.getElementById("btn-ready-customise").addEventListener("click", openSettingsModal);
+    document.getElementById("btn-close-settings").addEventListener("click", closeSettingsModal);
+
+    // Quick preset buttons in Settings Modal
+    document.querySelectorAll(".preset-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const preset = btn.dataset.preset;
+        let ids = TOPICS.map(t => t.id);
+        if (preset === "pure") {
+          ids = TOPICS.filter(t => t.tier === "A-Level Pure").map(t => t.id);
+        } else if (preset === "further") {
+          ids = TOPICS.filter(t => t.tier === "Further Pure").map(t => t.id);
+        } else if (preset === "quant") {
+          ids = ["numerical", "quadratics", "matrices"];
+        }
+        els.topicTogglesGrid.querySelectorAll(".topic-chk").forEach(chk => {
+          chk.checked = ids.includes(chk.value);
+        });
+        els.activeTopicCount.textContent = `${ids.length} / ${TOPICS.length} enabled`;
+      });
+    });
+
+    document.getElementById("btn-reset-defaults").addEventListener("click", () => {
+      state.settings = { ...DEFAULT_SETTINGS };
+      persistData();
+      applyThemeAndKeypad();
+      openSettingsModal();
+    });
+
+    document.getElementById("btn-save-settings").addEventListener("click", () => {
+      const checkedIds = Array.from(els.topicTogglesGrid.querySelectorAll(".topic-chk:checked")).map(c => c.value);
+      state.settings.enabledTopics = checkedIds.length > 0 ? checkedIds : TOPICS.map(t => t.id);
+      state.settings.difficulty = els.cfgDifficulty.value;
+      state.settings.sprintSec = Number(els.cfgSprintSec.value) || 90;
+      state.settings.deltaRule = els.cfgDeltaRule.value;
+      state.settings.showKeypad = els.cfgShowKeypad.checked;
+      state.settings.autoAdvance = els.cfgAutoAdvance.checked;
+
+      persistData();
+      applyThemeAndKeypad();
+      closeSettingsModal();
+      selectMode(state.mode);
+    });
+
+    // Boot application
+    ensureKatex();
+    applyThemeAndKeypad();
+    selectMode("sprint");
+  </script>
+</body>
+</html>
