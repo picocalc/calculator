@@ -202,7 +202,7 @@
     let m;
     try {
       const params = new URLSearchParams(window.location.search);
-      const DEFAULT_COMMIT = '7e426f5';
+      const DEFAULT_COMMIT = '0ca1a5c';
       const commit = params.get('commit') || DEFAULT_COMMIT;
       if (commit?.length !== 7) throw new Error('Invalid `commit` param');
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
@@ -624,11 +624,11 @@
 
       steps.push({
         title: 'Identify quadratic coefficients',
-        math: `a = ${a.print()},  b = ${b.print()},  c = ${c.print()}`,
+        math: `a = ${m.printNode(a)},  b = ${m.printNode(b)},  c = ${m.printNode(c)}`,
       });
       steps.push({
         title: 'Compute exact discriminant Δ = b² − 4ac',
-        math: `Δ = (${b.print()})² − 4(${a.print()})(${c.print()}) = ${disc.print()}`,
+        math: `Δ = (${m.printNode(b)})² − 4(${m.printNode(a)})(${m.printNode(c)}) = ${m.printNode(disc)}`,
       });
 
       const discRat = toRat(disc);
@@ -638,12 +638,12 @@
         const root = simplify(op('/', negB, twoA));
         steps.push({
           title: 'Δ = 0 implies one repeated real root',
-          math: `${v} = −b / (2a) = ${root.print()}`,
+          math: `${v} = −b / (2a) = ${m.printNode(root)}`,
         });
         return [
           {
             label: `${v}₁,₂`,
-            exact: root.print(),
+            exact: m.printNode(root),
             approx: evalNumeric(root, v, 0),
             isReal: true,
             method: 'Exact Quadratic (Multiplicity 2)',
@@ -661,12 +661,12 @@
 
         steps.push({
           title: 'Δ < 0 yields complex conjugate roots',
-          math: `${v} = (${negB.print()} ± ${sqrtAbsDisc.print()}·i) / (${twoA.print()})`,
+          math: `${v} = (${m.printNode(negB)} ± ${m.printNode(sqrtAbsDisc)}·i) / (${m.printNode(twoA)})`,
         });
 
-        const imStr = isOne(im) ? 'i' : `${im.print()}i`;
-        const r1Str = isZero(re) ? `-${imStr}` : `${re.print()} - ${imStr}`;
-        const r2Str = isZero(re) ? `${imStr}` : `${re.print()} + ${imStr}`;
+        const imStr = isOne(im) ? 'i' : `${m.printNode(im)}i`;
+        const r1Str = isZero(re) ? `-${imStr}` : `${m.printNode(re)} - ${imStr}`;
+        const r2Str = isZero(re) ? `${imStr}` : `${m.printNode(re)} + ${imStr}`;
 
         return [
           { label: `${v}₁`, exact: r1Str, approx: NaN, isReal: false, method: 'Exact Complex Conjugate', verified: true },
@@ -677,7 +677,7 @@
       const sqrtDisc = simplify(fn('sqrt', disc));
       steps.push({
         title: 'Apply quadratic formula & simplify radicals',
-        math: `${v} = (${negB.print()} ± ${sqrtDisc.print()}) / (${twoA.print()})`,
+        math: `${v} = (${m.printNode(negB)} ± ${m.printNode(sqrtDisc)}) / (${m.printNode(twoA)})`,
       });
 
       const r1 = simplify(op('/', op('-', negB, sqrtDisc), twoA));
@@ -686,7 +686,7 @@
       const roots = [r1, r2]
         .map((r, idx) => ({
           label: `${v}${idx === 0 ? '₁' : '₂'}`,
-          exact: r.print(),
+          exact: m.printNode(r),
           approx: evalNumeric(r, v, 0),
           isReal: true,
           method: 'Exact Symbolic Radical',
@@ -791,13 +791,13 @@
 
         steps.push({
           title: 'Rational Root Theorem & synthetic deflation',
-          math: `Found rational root ${v} = ${rootNode.print()}; deflated to degree ${curDeg}`,
+          math: `Found rational root ${v} = ${m.printNode(rootNode)}; deflated to degree ${curDeg}`,
         });
       }
 
       const out = roots.map((r) => ({
         label: v,
-        exact: r.print(),
+        exact: m.printNode(r),
         approx: evalNumeric(r, v, 0),
         isReal: true,
         method: 'Rational Root Theorem',
@@ -819,7 +819,7 @@
         const r = ratNode(-intCoeffs[0], intCoeffs[1]);
         out.push({
           label: v,
-          exact: r.print(),
+          exact: m.printNode(r),
           approx: evalNumeric(r, v, 0),
           isReal: true,
           method: 'Linear Factor',
@@ -834,7 +834,7 @@
     function solveByPeeling(lhs, rhs, v, steps) {
       if (countVar(lhs, v) === 0 && countVar(rhs, v) === 1) {
         [lhs, rhs] = [rhs, lhs];
-        steps.push({ title: 'Swap sides so unknown is on the left', math: `${lhs.print()} = ${rhs.print()}` });
+        steps.push({ title: 'Swap sides so unknown is on the left', math: `${m.printNode(lhs)} = ${m.printNode(rhs)}` });
       }
       if (countVar(lhs, v) !== 1 || countVar(rhs, v) !== 0) return null;
 
@@ -857,31 +857,31 @@
           if (L.type === 'ADD') {
             const [u, k] = countVar(L.left, v) === 1 ? [L.left, L.right] : [L.right, L.left];
             const newR = simplify(op('-', R, k));
-            steps.push({ title: `Subtract ${k.print()} from both sides`, math: `${u.print()} = ${newR.print()}` });
+            steps.push({ title: `Subtract ${m.printNode(k)} from both sides`, math: `${m.printNode(u)} = ${m.printNode(newR)}` });
             nextBranches.push({ lhs: u, rhs: newR });
           } else if (L.type === 'SUBTRACT') {
             if (countVar(L.left, v) === 1) {
               const newR = simplify(op('+', R, L.right));
-              steps.push({ title: `Add ${L.right.print()} to both sides`, math: `${L.left.print()} = ${newR.print()}` });
+              steps.push({ title: `Add ${m.printNode(L.right)} to both sides`, math: `${m.printNode(L.left)} = ${m.printNode(newR)}` });
               nextBranches.push({ lhs: L.left, rhs: newR });
             } else {
               const newR = simplify(op('-', L.left, R));
-              steps.push({ title: `Isolate subtrahend`, math: `${L.right.print()} = ${newR.print()}` });
+              steps.push({ title: `Isolate subtrahend`, math: `${m.printNode(L.right)} = ${m.printNode(newR)}` });
               nextBranches.push({ lhs: L.right, rhs: newR });
             }
           } else if (L.type === 'MULTIPLY') {
             const [u, k] = countVar(L.left, v) === 1 ? [L.left, L.right] : [L.right, L.left];
             const newR = simplify(op('/', R, k));
-            steps.push({ title: `Divide both sides by ${k.print()}`, math: `${u.print()} = ${newR.print()}` });
+            steps.push({ title: `Divide both sides by ${m.printNode(k)}`, math: `${m.printNode(u)} = ${m.printNode(newR)}` });
             nextBranches.push({ lhs: u, rhs: newR });
           } else if (L.type === 'DIVIDE') {
             if (countVar(L.left, v) === 1) {
               const newR = simplify(op('*', R, L.right));
-              steps.push({ title: `Multiply both sides by ${L.right.print()}`, math: `${L.left.print()} = ${newR.print()}` });
+              steps.push({ title: `Multiply both sides by ${m.printNode(L.right)}`, math: `${m.printNode(L.left)} = ${m.printNode(newR)}` });
               nextBranches.push({ lhs: L.left, rhs: newR });
             } else {
               const newR = simplify(op('/', L.left, R));
-              steps.push({ title: `Take reciprocal & multiply`, math: `${L.right.print()} = ${newR.print()}` });
+              steps.push({ title: `Take reciprocal & multiply`, math: `${m.printNode(L.right)} = ${m.printNode(newR)}` });
               nextBranches.push({ lhs: L.right, rhs: newR });
             }
           } else if (L.type === 'POWER' && countVar(L.left, v) === 1 && L.right.type === 'INTEGER' && L.right.value >= 2n) {
@@ -892,40 +892,40 @@
               const negRoot = simplify(op('*', num(-1n), rootVal));
               steps.push({
                 title: `Take even ${n}-th root (± branches)`,
-                math: `${L.left.print()} = ±(${rootVal.print()})`,
+                math: `${m.printNode(L.left)} = ±(${m.printNode(rootVal)})`,
               });
               nextBranches.push({ lhs: L.left, rhs: rootVal });
               nextBranches.push({ lhs: L.left, rhs: negRoot });
             } else {
-              steps.push({ title: `Take odd ${n}-th root`, math: `${L.left.print()} = ${rootVal.print()}` });
+              steps.push({ title: `Take odd ${n}-th root`, math: `${m.printNode(L.left)} = ${m.printNode(rootVal)}` });
               nextBranches.push({ lhs: L.left, rhs: rootVal });
             }
           } else if (L.type === 'FUNCTION' && L.args.length === 1) {
             const [u] = L.args;
             if (L.name === 'sqrt') {
               const newR = simplify(op('^', R, num(2n)));
-              steps.push({ title: 'Square both sides', math: `${u.print()} = ${newR.print()}` });
+              steps.push({ title: 'Square both sides', math: `${m.printNode(u)} = ${m.printNode(newR)}` });
               nextBranches.push({ lhs: u, rhs: newR });
             } else if (L.name === 'abs') {
               const negR = simplify(op('*', num(-1n), R));
-              steps.push({ title: 'Split absolute value into ± cases', math: `${u.print()} = ${R.print()}  or  ${u.print()} = ${negR.print()}` });
+              steps.push({ title: 'Split absolute value into ± cases', math: `${m.printNode(u)} = ${m.printNode(R)}  or  ${m.printNode(u)} = ${m.printNode(negR)}` });
               nextBranches.push({ lhs: u, rhs: R });
               nextBranches.push({ lhs: u, rhs: negR });
             } else if (L.name === 'ln') {
               const newR = simplify(op('^', parse('e'), R));
-              steps.push({ title: 'Exponentiate both sides (base e)', math: `${u.print()} = ${newR.print()}` });
+              steps.push({ title: 'Exponentiate both sides (base e)', math: `${m.printNode(u)} = ${m.printNode(newR)}` });
               nextBranches.push({ lhs: u, rhs: newR });
             } else if (L.name === 'exp') {
               const newR = simplify(fn('ln', R));
-              steps.push({ title: 'Take natural logarithm ln(…)', math: `${u.print()} = ${newR.print()}` });
+              steps.push({ title: 'Take natural logarithm ln(…)', math: `${m.printNode(u)} = ${m.printNode(newR)}` });
               nextBranches.push({ lhs: u, rhs: newR });
             } else if (L.name === 'sin') {
               const newR = simplify(fn('arcsin', R));
-              steps.push({ title: 'Apply principal inverse arcsin(…)', math: `${u.print()} = ${newR.print()}` });
+              steps.push({ title: 'Apply principal inverse arcsin(…)', math: `${m.printNode(u)} = ${m.printNode(newR)}` });
               nextBranches.push({ lhs: u, rhs: newR });
             } else if (L.name === 'cos') {
               const newR = simplify(fn('arccos', R));
-              steps.push({ title: 'Apply principal inverse arccos(…)', math: `${u.print()} = ±(${newR.print()})` });
+              steps.push({ title: 'Apply principal inverse arccos(…)', math: `${m.printNode(u)} = ±(${m.printNode(newR)})` });
               nextBranches.push({ lhs: u, rhs: newR });
               nextBranches.push({ lhs: u, rhs: simplify(op('*', num(-1n), newR)) });
             } else {
@@ -942,7 +942,7 @@
 
       return branches.map((b) => ({
         label: v,
-        exact: b.rhs.print(),
+        exact: m.printNode(b.rhs),
         approx: evalNumeric(b.rhs, v, 0),
         isReal: Number.isFinite(evalNumeric(b.rhs, v, 0)),
         method: 'Exact Inverse Peeling',
@@ -1040,11 +1040,11 @@
       const steps = [
         {
           title: 'Parse & canonicalize both sides',
-          math: `${lhsSimp.print()} = ${rhsSimp.print()}`,
+          math: `${m.printNode(lhsSimp)} = ${m.printNode(rhsSimp)}`,
         },
         {
           title: 'Move all terms to left-hand side (LHS − RHS = 0)',
-          math: `${diffAst.print()} = 0`,
+          math: `${m.printNode(diffAst)} = 0`,
         },
       ];
 
@@ -1065,8 +1065,8 @@
             statusNote = { type: 'identity', text: `Infinite solutions: 0 = 0 holds for every ${v} ∈ ℝ` };
             steps.push({ title: 'All variable terms cancel out', math: `0 = 0 (Identity for all ${v})` });
           } else {
-            statusNote = { type: 'contradiction', text: `No solution (∅): ${c0.print()} ≠ 0` };
-            steps.push({ title: 'Contradiction reached', math: `${c0.print()} = 0 has no solution` });
+            statusNote = { type: 'contradiction', text: `No solution (∅): ${m.printNode(c0)} ≠ 0` };
+            steps.push({ title: 'Contradiction reached', math: `${m.printNode(c0)} = 0 has no solution` });
           }
           roots = [];
         } else if (maxDeg === 1) {
@@ -1075,12 +1075,12 @@
           const b = polyCoeffs.get(0) || num(0n);
           const negB = simplify(op('*', num(-1n), b));
           const root = simplify(op('/', negB, a));
-          steps.push({ title: 'Isolate linear term', math: `${a.print()} · ${v} = ${negB.print()}` });
-          steps.push({ title: `Divide by ${a.print()}`, math: `${v} = ${root.print()}` });
+          steps.push({ title: 'Isolate linear term', math: `${m.printNode(a)} · ${v} = ${m.printNode(negB)}` });
+          steps.push({ title: `Divide by ${m.printNode(a)}`, math: `${v} = ${m.printNode(root)}` });
           roots = [
             {
               label: v,
-              exact: root.print(),
+              exact: m.printNode(root),
               approx: evalNumeric(root, v, 0),
               isReal: true,
               method: 'Exact Linear Isolation',
@@ -1449,7 +1449,7 @@
       document.getElementById('cursor-var-label').textContent = `${res.variable} =`;
 
       document.getElementById('eq-class-badge').textContent = res.classification;
-      document.getElementById('canonical-form').textContent = `${res.diffAst.print()} = 0`;
+      document.getElementById('canonical-form').textContent = `${m.printNode(res.diffAst)} = 0`;
 
       // Render Root Cards
       rootsContainer.innerHTML = '';

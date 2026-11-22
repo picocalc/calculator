@@ -556,7 +556,7 @@
 
     try {
       const params = new URLSearchParams(window.location.search);
-      const DEFAULT_COMMIT = '7e426f5';
+      const DEFAULT_COMMIT = '0ca1a5c';
       const commit = params.get('commit') || DEFAULT_COMMIT;
       if (commit?.length !== 7) throw new Error('Invalid `commit` param');
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
@@ -621,7 +621,7 @@
         return {
           rawTree,
           simplifiedTree,
-          printed: simplifiedTree.print()
+          printed: nano.printNode(simplifiedTree)
         };
       }
 
@@ -643,7 +643,7 @@
         case "INTEGER":
           return node.value.toString();
         case "DECIMAL":
-          return node.print();
+          return nano.printNode(node);
         case "FRACTION": {
           const num = node.numerator;
           const den = node.denominator;
@@ -699,7 +699,7 @@
           return `${bStr}^{${exp}}`;
         }
         default:
-          return node.print ? node.print() : "";
+          return nano.printNode(node) ?? '';
       }
     }
 
@@ -758,7 +758,7 @@
         case "INTEGER":
           return { re: Number(node.value), im: 0 };
         case "DECIMAL":
-          return { re: Number(node.print()), im: 0 };
+          return { re: Number(nano.printNode(node)), im: 0 };
         case "FRACTION":
           return { re: Number(node.numerator) / Number(node.denominator), im: 0 };
         case "SYMBOL": {
@@ -862,7 +862,7 @@
           constants: CUSTOM_CONSTANTS,
           complex: true
         });
-        if (diffTree.print() === "0") {
+        if (nano.printNode(diffTree) === "0") {
           return { ok: true, diagnostic: null, printed: userParsed.printed };
         }
       } catch (_) {

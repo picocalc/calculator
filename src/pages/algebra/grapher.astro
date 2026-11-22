@@ -239,7 +239,7 @@
     let m;
     try {
       const params = new URLSearchParams(window.location.search);
-      const DEFAULT_COMMIT = '7e426f5';
+      const DEFAULT_COMMIT = '0ca1a5c';
       const commit = params.get('commit') || DEFAULT_COMMIT;
       if (commit?.length !== 7) throw new Error('Invalid `commit` param');
       const mod = await import(`https://esm.sh/gh/picocalc/nanoalgebra@${commit}`);
@@ -263,7 +263,7 @@
     const parse = (s) => m.parse(s, { functions: FUNCS });
     const num = (n) => parse(BigInt(n).toString());
 
-    // Deep AST clone preserving prototype methods (.print(), etc.)
+    // Deep AST clone preserving prototype methods (.toString(), etc.)
     const clone = (n) => {
       if (!n || typeof n !== 'object') return n;
       const c = Object.assign(Object.create(Object.getPrototypeOf(n)), n);
@@ -677,11 +677,11 @@
         const x0Node = simplify(parse(x0Str || '0'));
 
         const exactSub = simplify(substitute(state.fAst, { x: x0Node }));
-        outExactVal.textContent = exactSub.print();
+        outExactVal.textContent = m.printNode(exactSub);
 
         if (state.layers.taylor) {
           state.taylorAst = buildTaylor(state.fAst, x0Node, state.taylorDegree);
-          outTaylor.textContent = state.taylorAst.print();
+          outTaylor.textContent = m.printNode(state.taylorAst);
         } else {
           state.taylorAst = null;
           outTaylor.textContent = 'Hidden (layer off)';
@@ -706,9 +706,9 @@
         state.dfAst = df;
         state.ddfAst = ddf;
 
-        outSimplified.textContent = simplified.print();
-        outDf.textContent = df.print();
-        outDdf.textContent = ddf.print();
+        outSimplified.textContent = m.printNode(simplified);
+        outDf.textContent = m.printNode(df);
+        outDdf.textContent = m.printNode(ddf);
 
         astTreeView.innerHTML = renderAstTree(simplified);
         astJsonView.textContent = JSON.stringify(
